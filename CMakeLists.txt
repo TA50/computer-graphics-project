@@ -8,20 +8,18 @@ set(CMAKE_CXX_STANDARD 20)
 project(${NAME})
 
 
-
 set(SRC_DIRECTORY "${PROJECT_SOURCE_DIR}/src")
 
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message( STATUS "Running in Debug mode")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Running in Debug mode")
     set(OUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin/Debug")
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     message(STATUS "Running in Release mode")
     set(OUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin/Release")
-else()
+else ()
     message("Unknown mode: " ${CMAKE_BUILD_TYPE})
-endif()
-
+endif ()
 
 
 message(STATUS "Output directory: " ${OUT_DIRECTORY})
@@ -29,9 +27,6 @@ set(SHADER_DIR "${OUT_DIRECTORY}/assets/shaders")
 
 # Copy Assets
 file(COPY ${PROJECT_SOURCE_DIR}/assets DESTINATION ${OUT_DIRECTORY})
-
-
-
 
 
 set(GLFW_PATH "C:/VulkanSDK/glfw-3.4.bin.WIN64")
@@ -43,7 +38,7 @@ include_directories(${GLFW_PATH}/include)
 
 include_directories(${SRC_DIRECTORY}/headers)
 include_directories(${SRC_DIRECTORY})
-include_directories(${SRC_DIRECTORY}/assets/shaders/src)
+include_directories(${PROJECT_SOURCE_DIR}/assets)
 
 link_directories(
         ${GLFW_PATH}/lib-vc2022
@@ -59,17 +54,12 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 
-
 # Build Shaders
-
-
-
-
 
 
 FILE(GLOB SHADERS "${SHADER_DIR}/src/*")
 message(STATUS "Building Shaders")
-foreach(SHADER ${SHADERS})
+foreach (SHADER ${SHADERS})
     message(STATUS "Building Shader: " ${SHADER})
     get_filename_component(SHADER_NAME ${SHADER} NAME)
     add_custom_command(TARGET ${PROJECT_NAME}

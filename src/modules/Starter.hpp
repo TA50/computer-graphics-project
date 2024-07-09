@@ -1,4 +1,6 @@
 // This has been adapted from the Vulkan tutorial
+#pragma  once
+#pragma warning(push, 0)
 
 #include <iostream>
 #include <stdexcept>
@@ -366,7 +368,7 @@ public:
 
 	PoolSizes DPSZs;
 
-protected:
+
 	uint32_t windowWidth;
 	uint32_t windowHeight;
 	bool windowResizable;
@@ -3419,3 +3421,8 @@ void DescriptorSet::map(int currentImage, void *src, int slot) {
 	memcpy(data, src, size);
 	vkUnmapMemory(BP->device, uniformBuffersMemory[slot][currentImage]);	
 }
+
+
+
+
+#pragma warning(pop)

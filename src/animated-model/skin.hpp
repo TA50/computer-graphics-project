@@ -14,7 +14,7 @@ public:
     glm::vec3 pos;
     glm::vec3 normal;
     glm::vec2 uv;
-    glm::vec4 jointIndices;
+    glm::ivec4 jointIndices;
     glm::vec4 jointWeights;
 
     static std::vector<VertexBindingDescriptorElement> getBindingDescription() {
@@ -31,7 +31,7 @@ public:
                                                                                       normal)),       sizeof(glm::vec3), NORMAL},
                 {0, 2, VK_FORMAT_R32G32_SFLOAT,       static_cast<uint32_t >(offsetof(SkinVertex,
                                                                                       uv)),           sizeof(glm::vec2), UV},
-                {0, 3, VK_FORMAT_R32G32B32A32_SFLOAT, static_cast<uint32_t >(offsetof(SkinVertex,
+                {0, 3, VK_FORMAT_R32G32B32A32_SINT,   static_cast<uint32_t >(offsetof(SkinVertex,
                                                                                       jointIndices)), sizeof(glm::vec4), OTHER},
                 {0, 4, VK_FORMAT_R32G32B32A32_SFLOAT, static_cast<uint32_t >(offsetof(SkinVertex,
                                                                                       jointWeights)), sizeof(glm::vec4), OTHER}
@@ -74,19 +74,22 @@ public:
     static PoolSizes getPoolSizes() {
         PoolSizes DPSZs = {};
         DPSZs.uniformBlocksInPool = 2;
-        DPSZs.texturesInPool = 0;
+        DPSZs.texturesInPool = 1;
         DPSZs.setsInPool = 2;
         return DPSZs;
     }
 
-    void init(BaseProject *bp, Camera *_camera) {
+
+    void init(BaseProject *bp, Camera *_camera, std::string baseTexture) {
         BP = bp;
         camera = _camera;
         VD.init(bp, SkinVertex::getBindingDescription(), SkinVertex::getDescriptorElements());
         DSL.init(bp, {
-                {Mvp_BINDING,               VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(SkinMvpObject),               1},
-                {InverseBindMatrix_BINDING, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(SkinInverseBindMatrixObject), 1}
+                {Mvp_BINDING,               VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(SkinMvpObject),               1},
+                {InverseBindMatrix_BINDING, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(SkinInverseBindMatrixObject), 1},
+                {Base_Texture_Binding,      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                   1},
         });
+        BaseTexture.init(bp, baseTexture);
 
         P.init(bp, &VD, VERT_SHADER, FRAG_SHADER, {&DSL});
         P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
@@ -100,7 +103,7 @@ public:
     void createPipelineAndDescriptorSets() {
         P.create();
         std::cout << "[Skin]: Pipeline created\n";
-        DS.init(BP, &DSL, {});
+        DS.init(BP, &DSL, {&BaseTexture});
         std::cout << "[Skin]: Descriptor Set Created\n";
     }
 
@@ -121,21 +124,30 @@ public:
         vkCmdDrawIndexed(commandBuffer,
                          static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
+
+    }
+
+    void updateUniformBuffers(uint32_t currentImage) {
+
         SkinInverseBindMatrixObject inverseBindMatrixObject{};
         for (auto kv: inverseBindMatrices) {
             inverseBindMatrixObject.inverseBindMatrices[kv.first] = kv.second;
         }
 
         DS.map(currentImage, &inverseBindMatrixObject, InverseBindMatrix_BINDING);
-    }
-
-    void updateUniformBuffers(uint32_t currentImage) {
         std::cout << "Updating uniform buffers\n";
-        updateJointMatrices();
+//        updateJointMatrices();
+//        for(auto kv: joints){
+//          kv.second->updateTransformedMatrix();
+//        }
         SkinMvpObject mvpObject{};
-        mvpObject.model = getModelMatrix();
+        mvpObject.model = getModelMatrix(joints[rootJointIndex]);
         mvpObject.view = camera->matrices.view;
         mvpObject.projection = camera->matrices.perspective;
+
+        for (auto kv: jointMatrices) {
+            mvpObject.jointTransformMatrices[kv.first] = kv.second;
+        }
 
         DS.map(currentImage, &mvpObject, Mvp_BINDING);
     }
@@ -149,6 +161,7 @@ public:
         P.destroy();
         VD.cleanup();
         DSL.cleanup();
+        BaseTexture.cleanup();
 
         vkDestroyBuffer(BP->device, vertexBuffer, nullptr);
         vkFreeMemory(BP->device, vertexBufferMemory, nullptr);
@@ -233,11 +246,25 @@ public:
         return vertices;
     }
 
-    glm::mat4 getModelMatrix() {
-        if (rootJointIndex >= 0 && joints.find(rootJointIndex) != joints.end()) {
-            return joints[rootJointIndex]->getGlobalMatrix();
+
+    static glm::mat4 getModelMatrix(Joint *currentJoint) {
+        // Base case: if currentJoint is null, return identity matrix
+        if (!currentJoint) {
+            return glm::mat4(1.0f);
         }
-        return glm::mat4(1.0f);
+
+        // Calculate the local transformation of the current joint
+        glm::mat4 localTransform = currentJoint->getTransformedMatrix();
+
+        // Initialize the cumulative transformation matrix
+        glm::mat4 cumulativeTransform = localTransform;
+
+        // Recursively calculate transformation for each child
+        for (Joint *child: currentJoint->children) {
+            cumulativeTransform *= getModelMatrix(child);
+        }
+
+        return cumulativeTransform;
     }
 
 protected:
@@ -253,6 +280,8 @@ protected:
 
     DescriptorSetLayout DSL;
     DescriptorSet DS;
+
+    Texture BaseTexture;
 
     DescriptorSetLayout InverseBindMatrixDSL;
     DescriptorSet InverseBindMatrixDS;
@@ -272,9 +301,10 @@ protected:
 
     const std::string VERT_SHADER = "assets/shaders/bin/skinning.vert.spv";
     const std::string FRAG_SHADER = "assets/shaders/bin/skinning.frag.spv";
+    const uint32_t InverseBinding_Mvp_SET = 0;
     const uint32_t Mvp_BINDING = 0;
     const uint32_t InverseBindMatrix_BINDING = 1;
-    const uint32_t InverseBinding_Mvp_SET = 0;
+    const uint32_t Base_Texture_Binding = 2;
 
 
     void createVertexBuffer() {

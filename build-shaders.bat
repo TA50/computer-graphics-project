@@ -21,3 +21,9 @@ glslc shaders/TextShader.vert -o shaders/TextVert.spv
 
 
 
+
+
+@REM Loop through all the files in the shaders directory and compile them
+for %%f in (assets\shaders\src\*) do (
+    glslc %%f -o assets\shaders\src\%%~nf.spv
+)

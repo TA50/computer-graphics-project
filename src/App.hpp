@@ -4,7 +4,7 @@
 #include "modules/Starter.hpp"
 #include "animated-model/skin.hpp"
 #include "animated-model/gltf-loader.hpp"
-
+#include "helper-structs.hpp"
 
 class App : public BaseProject {
 protected:
@@ -37,13 +37,17 @@ protected:
 
 
     void localInit() {
-        tinygltf::Model model = GltfLoader::loadGlTFFile("assets/models/CesiumMan/glTF/CesiumMan.gltf");
+//        tinygltf::Model model = GltfLoader::loadGlTFFile("assets/models/CesiumMan/glTF-Embedded/CesiumMan.gltf");
+//        tinygltf::Model model = GltfLoader::loadGlTFFile("assets/models/CesiumMan/glTF/CesiumMan.gltf");
+        tinygltf::Model model = GltfLoader::loadGlTFFile("assets/models/pepsiman/scene.gltf");
         std::vector<Skin *> skins{};
         for (const auto &skin: model.skins) {
             skins.push_back(new Skin(GltfLoader::loadSkin(model, skin)));
         }
 
         skin = skins[0];
+
+         GltfLoader::loadAnimations(skin, model);
 
         for (auto &idx: skin->getJointIndices()) {
             auto joint = skin->getJoint(idx);
@@ -62,12 +66,8 @@ protected:
         DPSZs.texturesInPool = skinDPSZs.texturesInPool;       // 5 textures
         DPSZs.setsInPool = skinDPSZs.setsInPool;       // 1 more descriptor sets
 
-        skin->init(this, &camera, "assets/models/CesiumMan/glTF/CesiumMan_img0.jpg");
-
-        std::cout << "Initialization completed!\n";
-        std::cout << "Uniform Blocks in the Pool  : " << DPSZs.uniformBlocksInPool << "\n";
-        std::cout << "Textures in the Pool        : " << DPSZs.texturesInPool << "\n";
-        std::cout << "Descriptor Sets in the Pool : " << DPSZs.setsInPool << "\n";
+        skin->init(this, &camera, "assets/models/pepsiman/textures/Pepsiman_baseColor.png");
+//        skin->init(this, &camera, "assets/models/CesiumMan/glTF/CesiumMan_img0.jpg");
 
 
     }
@@ -102,19 +102,21 @@ protected:
 
         skin->bind(commandBuffer, currentImage);
 
-        std::cout << "Command buffer populated!\n";
     }
 
     // Here is where you update the uniforms.
     // Very likely this will be where you will be writing the logic of your application.
     void updateUniformBuffer(uint32_t currentImage) {
-
         float deltaT;
         glm::vec3 m = glm::vec3(0.0f), r = glm::vec3(0.0f);
         bool fire = false;
         getSixAxis(deltaT, m, r, fire);
 
-        skin->updateUniformBuffers(currentImage);
+        AxisInput axisInput{};
+        axisInput.axis = m;
+        axisInput.rotation = r;
+        axisInput.deltaTime = deltaT;
+        skin->render( currentImage, axisInput, frameTime);
 
 
     }

@@ -1,8 +1,5 @@
 #pragma  once
-
-#include "animated-model/node.hpp"
 #include "animated-model/skin.hpp"
-#include "animated-model/scene.hpp"
 
 
 class GltfLoader {
@@ -64,7 +61,7 @@ public:
                 break;
             }
         }
-        if(rootIndex == -1){
+        if (rootIndex == -1) {
             throw std::runtime_error("No root joint found for skin");
         }
         skin.setRootJoint(jointMap[rootIndex], rootIndex);
@@ -141,7 +138,8 @@ public:
         return skin;
     }
 
-    static Joint *loadJoint(const tinygltf::Model &model, int nodeIndex, Joint *parent, std::unordered_map<int, Joint *> *jointMap) {
+    static Joint *
+    loadJoint(const tinygltf::Model &model, int nodeIndex, Joint *parent, std::unordered_map<int, Joint *> *jointMap) {
         auto node = model.nodes[nodeIndex];
         auto *joint = new Joint(node.name, nodeIndex);
 
@@ -174,6 +172,100 @@ public:
 
         jointMap->insert({nodeIndex, joint});
         return joint;
+    }
+
+
+    static void loadAnimations(Skin *skin, tinygltf::Model &input) {
+        skin->animations.resize(input.animations.size());
+
+        for (size_t i = 0; i < input.animations.size(); i++) {
+            tinygltf::Animation glTFAnimation = input.animations[i];
+            skin->animations[i].name = glTFAnimation.name;
+
+            // Samplers
+            skin->animations[i].samplers.resize(glTFAnimation.samplers.size());
+            for (size_t j = 0; j < glTFAnimation.samplers.size(); j++) {
+                tinygltf::AnimationSampler glTFSampler = glTFAnimation.samplers[j];
+                AnimationSampler &dstSampler = skin->animations[i].samplers[j];
+                dstSampler.interpolation = glTFSampler.interpolation;
+
+                // Read sampler keyframe input time values
+                {
+                    const tinygltf::Accessor &accessor = input.accessors[glTFSampler.input];
+                    const tinygltf::BufferView &bufferView = input.bufferViews[accessor.bufferView];
+                    const tinygltf::Buffer &buffer = input.buffers[bufferView.buffer];
+                    const void *dataPtr = &buffer.data[accessor.byteOffset + bufferView.byteOffset];
+                    const float *buf = static_cast<const float *>(dataPtr);
+                    for (size_t index = 0; index < accessor.count; index++) {
+                        dstSampler.inputs.push_back(buf[index]);
+                    }
+                    // Adjust animation's start and end times
+                    for (auto input: skin->animations[i].samplers[j].inputs) {
+                        if (input < skin->animations[i].start) {
+                            skin->animations[i].start = input;
+                        };
+                        if (input > skin->animations[i].end) {
+                            skin->animations[i].end = input;
+                        }
+                    }
+                }
+
+                // Read sampler keyframe output translate/rotate/scale values
+                {
+                    const tinygltf::Accessor &accessor = input.accessors[glTFSampler.output];
+                    const tinygltf::BufferView &bufferView = input.bufferViews[accessor.bufferView];
+                    const tinygltf::Buffer &buffer = input.buffers[bufferView.buffer];
+                    const void *dataPtr = &buffer.data[accessor.byteOffset + bufferView.byteOffset];
+                    switch (accessor.type) {
+                        case TINYGLTF_TYPE_VEC3: {
+                            const glm::vec3 *buf = static_cast<const glm::vec3 *>(dataPtr);
+//                            dstSampler.outputsVec4.resize(accessor.count);
+                            for (size_t index = 0; index < accessor.count; index++) {
+                                alignas(16) auto b = buf[index];
+                                glm::vec4 v = glm::vec4(0.0f);
+                                v.x = b[0];
+                                v.y = b[1];
+                                v.z = b[2];
+
+                                dstSampler.outputsVec4.push_back(v);
+//                                dstSampler.outputsVec4[index] = glm::vec4(buf[index], 0.0f);
+                            }
+                            break;
+                        }
+                        case TINYGLTF_TYPE_VEC4: {
+                            const glm::vec4 *buf = static_cast<const glm::vec4 *>(dataPtr);
+//                            dstSampler.outputsVec4.resize(accessor.count);
+                            for (size_t index = 0; index < accessor.count; index++) {
+                                dstSampler.outputsVec4.push_back(buf[index]);
+//                                dstSampler.outputsVec4[index] = buf[index];
+                            }
+                            break;
+                        }
+                        default: {
+                            std::cout << "unknown type" << std::endl;
+                            break;
+                        }
+                    }
+                }
+
+                std::cout << "Sampler: " << j << std::endl;
+                for (auto &output: dstSampler.outputsVec4) {
+                    std::cout << "Output: " << output.x << " " << output.y << " " << output.z << " " << output.w
+                              << std::endl;
+                }
+            }
+
+
+            // Channels
+            skin->animations[i].channels.resize(glTFAnimation.channels.size());
+            for (size_t j = 0; j < glTFAnimation.channels.size(); j++) {
+                tinygltf::AnimationChannel glTFChannel = glTFAnimation.channels[j];
+                AnimationChannel &dstChannel = skin->animations[i].channels[j];
+                dstChannel.path = glTFChannel.target_path;
+                dstChannel.samplerIndex = glTFChannel.sampler;
+                dstChannel.joint = skin->getJoint(glTFChannel.target_node);
+            }
+        }
     }
 
 

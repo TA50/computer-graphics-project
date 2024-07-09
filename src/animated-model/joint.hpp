@@ -24,11 +24,6 @@ public:
     }
 
 
-    void updateTransformedMatrix() {
-        transformedMatrix = glm::scale(localMatrix, scale);
-        transformedMatrix = glm::mat4_cast(rotation) * transformedMatrix;
-        transformedMatrix = glm::translate(transformedMatrix, translation);
-    }
 
     glm::mat4 getTransformedMatrix() {
         return glm::translate(glm::mat4(1.0f), translation) * glm::mat4(rotation) * glm::scale(glm::mat4(1.0f), scale) *
@@ -85,7 +80,6 @@ public:
 private:
     int index{};
     std::string name;
-    glm::mat4 transformedMatrix{};
     glm::mat4 localMatrix{};
     bool localMatrixSet = false;
 };

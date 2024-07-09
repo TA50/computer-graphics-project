@@ -17,7 +17,7 @@
 #include <math.h>
 
 #define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+//#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
 #include <glm/glm.hpp>
@@ -410,6 +410,8 @@ public:
 
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 	size_t currentFrame = 0;
+    float frameTime = 0.0f;
+    uint32_t frameCounter = 0;
 	bool framebufferResized = false;
 
 	std::vector<VkSemaphore> imageAvailableSemaphores;
@@ -1618,7 +1620,13 @@ std::cout << "Starting createInstance()\n"  << std::flush;
     void mainLoop() {
         while (!glfwWindowShouldClose(window)){
             glfwPollEvents();
+            auto tStart = std::chrono::high_resolution_clock::now();
             drawFrame();
+            frameCounter++;
+            auto tEnd = std::chrono::high_resolution_clock::now();
+            auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();
+            frameTime = (float)tDiff / 1000.0f;
+
         }
         
         vkDeviceWaitIdle(device);
@@ -1645,7 +1653,7 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 							VK_TRUE, UINT64_MAX);
 		}
 		imagesInFlight[imageIndex] = inFlightFences[currentFrame];
-		
+//        updateUniformBuffer
 		updateUniformBuffer(imageIndex);
 		
 		VkSubmitInfo submitInfo{};

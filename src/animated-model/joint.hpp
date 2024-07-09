@@ -16,7 +16,7 @@ public:
     glm::quat rotation{};
     glm::vec3 translation{};
 
-    explicit Joint(std::string name, int index) : name(std::move(name)),  index(index) {
+    explicit Joint(std::string name, int index) : name(std::move(name)), index(index) {
         scale = glm::vec3(1);
         rotation = glm::quat(1, 0, 0, 0);
         translation = glm::vec3(0);
@@ -30,26 +30,32 @@ public:
         transformedMatrix = glm::translate(transformedMatrix, translation);
     }
 
-    glm::mat4 &getTransformedMatrix() {
-        return transformedMatrix;
+    glm::mat4 getTransformedMatrix() {
+        return glm::translate(glm::mat4(1.0f), translation) * glm::mat4(rotation) * glm::scale(glm::mat4(1.0f), scale) *
+                localMatrix;
     }
 
     glm::mat4 &getLocalMatrix() {
         return localMatrix;
     }
+
     glm::mat4 getGlobalMatrix() {
-        if (parent) {
-            return parent->getGlobalMatrix() * transformedMatrix;
-        } else {
-            return localMatrix;
+        glm::mat4 jointMatrix = getTransformedMatrix();
+        Joint *currentParent = parent;
+        while (currentParent) {
+            jointMatrix = currentParent->getTransformedMatrix() * jointMatrix;
+            currentParent = currentParent->parent;
         }
+        return jointMatrix;
     }
+
     void setLocalMatrix(glm::mat4 m) {
         assert(!localMatrixSet);
         localMatrix = m;
         localMatrixSet = true;
     }
-    void setLocalMatrix(){
+
+    void setLocalMatrix() {
         assert(!localMatrixSet);
         localMatrix = glm::translate(glm::mat4(1), translation);
         localMatrix = glm::mat4_cast(rotation) * localMatrix;
@@ -57,14 +63,23 @@ public:
         localMatrixSet = true;
     }
 
-    std::string getName(){
+    std::string getName() {
         return name;
     }
 
-    int getIndex(){
+    int getIndex() {
         return index;
     }
 
+    static glm::mat4 getJointMatrix(Joint *joint) {
+        glm::mat4 jointMatrix = joint->getTransformedMatrix();
+        Joint *currentParent = joint->parent;
+        while (currentParent) {
+            jointMatrix = getJointMatrix(currentParent) * jointMatrix;
+            currentParent = currentParent->parent;
+        }
+        return jointMatrix;
+    }
 
 
 private:

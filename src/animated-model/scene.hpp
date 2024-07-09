@@ -6,11 +6,10 @@
 #include "modules/Starter.hpp"
 #include "animated-model/joint.hpp"
 #include "camera.hpp"
-#include "printer.hpp"
 
 #define MAX_JOINTS_COUNT 100
 
-struct SkinVertex {
+struct SceneVertex {
 public:
     glm::vec3 pos;
     glm::vec3 normal;
@@ -20,47 +19,47 @@ public:
 
     static std::vector<VertexBindingDescriptorElement> getBindingDescription() {
         return {
-                {0, sizeof(SkinVertex), VK_VERTEX_INPUT_RATE_VERTEX},
+                {0, sizeof(SceneVertex), VK_VERTEX_INPUT_RATE_VERTEX},
         };
     }
 
     static std::vector<VertexDescriptorElement> getDescriptorElements() {
         return {
-                {0, 0, VK_FORMAT_R32G32B32_SFLOAT,    static_cast<uint32_t >(offsetof(SkinVertex,
+                {0, 0, VK_FORMAT_R32G32B32_SFLOAT,    static_cast<uint32_t >(offsetof(SceneVertex,
                                                                                       pos)),          sizeof(glm::vec3), POSITION},
-                {0, 1, VK_FORMAT_R32G32B32_SFLOAT,    static_cast<uint32_t >(offsetof(SkinVertex,
+                {0, 1, VK_FORMAT_R32G32B32_SFLOAT,    static_cast<uint32_t >(offsetof(SceneVertex,
                                                                                       normal)),       sizeof(glm::vec3), NORMAL},
-                {0, 2, VK_FORMAT_R32G32_SFLOAT,       static_cast<uint32_t >(offsetof(SkinVertex,
+                {0, 2, VK_FORMAT_R32G32_SFLOAT,       static_cast<uint32_t >(offsetof(SceneVertex,
                                                                                       uv)),           sizeof(glm::vec2), UV},
-                {0, 3, VK_FORMAT_R32G32B32A32_SINT,   static_cast<uint32_t >(offsetof(SkinVertex,
+                {0, 3, VK_FORMAT_R32G32B32A32_SINT,   static_cast<uint32_t >(offsetof(SceneVertex,
                                                                                       jointIndices)), sizeof(glm::vec4), OTHER},
-                {0, 4, VK_FORMAT_R32G32B32A32_SFLOAT, static_cast<uint32_t >(offsetof(SkinVertex,
+                {0, 4, VK_FORMAT_R32G32B32A32_SFLOAT, static_cast<uint32_t >(offsetof(SceneVertex,
                                                                                       jointWeights)), sizeof(glm::vec4), OTHER}
         };
     }
 };
 
-struct SkinMvpObject {
+struct SceneMvpObject {
     alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 projection;
     alignas(16) glm::mat4 jointTransformMatrices[MAX_JOINTS_COUNT];
 };
 
-struct SkinInverseBindMatrixObject {
+struct SceneInverseBindMatrixObject {
     alignas(16) glm::mat4 inverseBindMatrices[MAX_JOINTS_COUNT];
 };
 
-class Skin {
+class Scene {
 public:
-    explicit Skin(std::string name, int jointsCount) : name(std::move(name)), jointsCount(jointsCount) {
+    explicit Scene(std::string name, int jointsCount) : name(std::move(name)), jointsCount(jointsCount) {
         rootJointIndex = -1;
 
         joints = std::unordered_map<int, Joint *>();
         inverseBindMatrices = std::unordered_map<int, glm::mat4>();
         jointMatrices = std::unordered_map<int, glm::mat4>();
 
-        vertices = std::vector<SkinVertex>();
+        vertices = std::vector<SceneVertex>();
         indices = std::vector<uint32_t>();
 
         BP = nullptr;
@@ -84,10 +83,10 @@ public:
     void init(BaseProject *bp, Camera *_camera, std::string baseTexture) {
         BP = bp;
         camera = _camera;
-        VD.init(bp, SkinVertex::getBindingDescription(), SkinVertex::getDescriptorElements());
+        VD.init(bp, SceneVertex::getBindingDescription(), SceneVertex::getDescriptorElements());
         DSL.init(bp, {
-                {Mvp_BINDING,               VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(SkinMvpObject),               1},
-                {InverseBindMatrix_BINDING, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(SkinInverseBindMatrixObject), 1},
+                {Mvp_BINDING,               VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(SceneMvpObject),               1},
+                {InverseBindMatrix_BINDING, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(SceneInverseBindMatrixObject), 1},
                 {Base_Texture_Binding,      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                   1},
         });
         BaseTexture.init(bp, baseTexture);
@@ -100,15 +99,15 @@ public:
 
 
 //        updateJointMatrices(joints[rootJointIndex]);
-        updateJointMatrices();
+//        updateJointMatrices();
 
     }
 
     void createPipelineAndDescriptorSets() {
         P.create();
-        std::cout << "[Skin]: Pipeline created\n";
+        std::cout << "[Scene]: Pipeline created\n";
         DS.init(BP, &DSL, {&BaseTexture});
-        std::cout << "[Skin]: Descriptor Set Created\n";
+        std::cout << "[Scene]: Descriptor Set Created\n";
     }
 
     void bind(VkCommandBuffer commandBuffer, int currentImage) {
@@ -137,16 +136,14 @@ public:
         updateJointMatrices();
 
         std::cout << "Updating uniform buffers\n";
-        SkinMvpObject mvpObject{};
-//        mvpObject.model = glm::translate(glm::scale(modelMatrix, glm::vec3(4)), glm::vec3(-0.3, -0.4, 0.3));
-        mvpObject.model = getJointMatrix(rootJoint);
-        mvpObject.view = camera->matrices.view ;
+        SceneMvpObject mvpObject{};
+        mvpObject.model = joints[rootJointIndex]->getLocalMatrix();
+        mvpObject.view = camera->matrices.view;
         mvpObject.projection = camera->matrices.perspective;
 
         for (auto &[index, matrix]: jointMatrices) {
             mvpObject.jointTransformMatrices[index] = matrix;
         }
-
 
         DS.map(currentImage, &mvpObject, Mvp_BINDING);
     }
@@ -177,7 +174,7 @@ public:
         joints[jointIndex] = joint;
     }
 
-    void addVertex(SkinVertex vertex) {
+    void addVertex(SceneVertex vertex) {
         vertices.push_back(vertex);
     }
 
@@ -189,9 +186,8 @@ public:
 
     // Setters
 
-    void setRootJoint(Joint *joint, int index) {
+    void setRootJoint(int index) {
         rootJointIndex = index;
-        rootJoint = joint;
     }
 
 
@@ -210,10 +206,6 @@ public:
 
     int getRootJointIndex() const {
         return rootJointIndex;
-    }
-
-    Joint *getRootJoint() const {
-        return rootJoint;
     }
 
     std::string getName() {
@@ -236,44 +228,48 @@ public:
         return indices;
     }
 
-    std::vector<SkinVertex> getVertices() {
+    std::vector<SceneVertex> getVertices() {
         std::vector<int> normalIndices;
         return vertices;
     }
 
 
     glm::mat4 getModelMatrix() {
-        return rootJoint->getGlobalMatrix();
+        return joints[rootJointIndex]->getGlobalMatrix();
     }
 
-
+    // POI: Update the joint matrices from the current animation frame and pass them to the GPU
+//    void updateJointMatrices(Joint *joint) {
+//        glm::mat4 inverseTransform = glm::inverse(Joint::getJointMatrix(joint));
+//        for (auto kv: joints) {
+//            jointMatrices[kv.first] = Joint::getJointMatrix(kv.second) * inverseBindMatrices[kv.first];
+//            jointMatrices[kv.first] = inverseTransform * jointMatrices[kv.first];
+//        }
+//        for (auto &child: joint->children) {
+//            updateJointMatrices(child);
+//        }
+//    }
     void updateJointMatrices() {
+        // Update transformed matrices for each joint
+        auto modelMatrix = getJointMatrix(joints[rootJointIndex]);
 
-        auto rootMat = getJointMatrix(rootJoint);
-        std::cout << "Root matrix: " << rootJoint->getIndex() << std::endl;
-        Printer::printArrArr(rootMat);
-
-        glm::mat4 inverseTransform = glm::inverse(rootMat);
+        glm::mat4 inverseTransform = glm::inverse(modelMatrix);
         for (auto &[index, joint]: joints) {
             // Apply joint transformation and inverse bind matrix
-            jointMatrices[index] = getJointMatrix(joint) * inverseBindMatrices[index];
+            glm::mat4 globalMatrix = joint->getGlobalMatrix();
+            jointMatrices[index] = globalMatrix * inverseBindMatrices[index];
             // Transform back to model space
             jointMatrices[index] = inverseTransform * jointMatrices[index];
 
         }
-        std::cout << "joint global matrix: 3" << std::endl;
-        Printer::printArrArr(getJointMatrix(joints[3]));
-        std::cout << "Joint Mat for joint 3" << std::endl;
-        Printer::printArrArr(jointMatrices[3]);
-
-
     }
 
-    glm::mat4 getJointMatrix(Joint *joint) {
-        glm::mat4 jointMatrix = joint->getTransformedMatrix();
-        Joint *currentParent = joint->parent;
-        while (currentParent) {
-            jointMatrix = currentParent->getTransformedMatrix() * jointMatrix;
+    glm::mat4 getJointMatrix(Joint * joint){
+        glm::mat4              jointMatrix    = joint->getTransformedMatrix();
+        Joint * currentParent = joint->parent;
+        while (currentParent)
+        {
+            jointMatrix    = currentParent->getTransformedMatrix() * jointMatrix;
             currentParent = currentParent->parent;
         }
         return jointMatrix;
@@ -282,11 +278,10 @@ public:
 protected:
     glm::mat4 modelMatrix;
     int rootJointIndex;
-    Joint *rootJoint;
     int jointsCount;
     std::string name;
     std::unordered_map<int, Joint *> joints;
-    std::vector<SkinVertex> vertices;
+    std::vector<SceneVertex> vertices;
     std::vector<uint32_t> indices;
     std::unordered_map<int, glm::mat4> inverseBindMatrices;
     std::unordered_map<int, glm::mat4> jointMatrices{};
@@ -313,8 +308,8 @@ protected:
     BaseProject *BP;
     Camera *camera;
 
-    const std::string VERT_SHADER = "assets/shaders/bin/skinning.vert.spv";
-    const std::string FRAG_SHADER = "assets/shaders/bin/skinning.frag.spv";
+    const std::string VERT_SHADER = "assets/shaders/bin/Scenening.vert.spv";
+    const std::string FRAG_SHADER = "assets/shaders/bin/Scenening.frag.spv";
     const uint32_t InverseBinding_Mvp_SET = 0;
     const uint32_t Mvp_BINDING = 0;
     const uint32_t InverseBindMatrix_BINDING = 1;
@@ -322,7 +317,7 @@ protected:
 
 
     void mapInverseBindMatrices(uint32_t currentImage) {
-        SkinInverseBindMatrixObject inverseBindMatrixObject{};
+        SceneInverseBindMatrixObject inverseBindMatrixObject{};
         for (auto kv: inverseBindMatrices) {
             inverseBindMatrixObject.inverseBindMatrices[kv.first] = kv.second;
         }
@@ -330,9 +325,12 @@ protected:
         DS.map(currentImage, &inverseBindMatrixObject, InverseBindMatrix_BINDING);
     }
 
+//    SceneMvpObject getMvpObject(){
+//        mvpObject
+//    }
 
     void createVertexBuffer() {
-        VkDeviceSize bufferSize = sizeof(SkinVertex) * vertices.size();
+        VkDeviceSize bufferSize = sizeof(SceneVertex) * vertices.size();
 
         BP->createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
@@ -343,7 +341,7 @@ protected:
         vkMapMemory(BP->device, vertexBufferMemory, 0, bufferSize, 0, &data);
         memcpy(data, vertices.data(), (size_t) bufferSize);
         vkUnmapMemory(BP->device, vertexBufferMemory);
-        std::cout << "[Skin] Vertex buffer created\n";
+        std::cout << "[Scene] Vertex buffer created\n";
     }
 
     void createIndexBuffer() {
@@ -359,6 +357,6 @@ protected:
         memcpy(data, indices.data(), (size_t) bufferSize);
         vkUnmapMemory(BP->device, indexBufferMemory);
 
-        std::cout << "[Skin] Index buffer created\n";
+        std::cout << "[Scene] Index buffer created\n";
     }
 };

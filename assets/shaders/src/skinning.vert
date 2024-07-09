@@ -21,20 +21,22 @@ layout(location = 0) out vec3 fragPos;
 layout(location = 1) out vec3 fragNorm;
 layout(location = 2) out vec2 fragUV;
 
+
+
+vec4 calculatePosition(){
+
+    // Calculate skinned matrix from weights and joint indices of the current vertex
+    mat4 skinMat =
+    inJointWeights.x * ubo.jointTransformMatrices[int(inJointIndices.x)] +
+    inJointWeights.y * ubo.jointTransformMatrices[int(inJointIndices.y)] +
+    inJointWeights.z * ubo.jointTransformMatrices[int(inJointIndices.z)] +
+    inJointWeights.w * ubo.jointTransformMatrices[int(inJointIndices.w)];
+
+    return  ubo.proj * ubo.view * ubo.model * skinMat * vec4(inPosition.xyz, 1.0);
+
+}
 void main() {
-//    mat4 skinMatrix =
-//    inJointWeights.x * jointTransformsUbo.jointMatrices[int(inJointIndices.x)] +
-//    inJointWeights.y * jointTransformsUbo.jointMatrices[int(inJointIndices.y)] +
-//    inJointWeights.z * jointTransformsUbo.jointMatrices[int(inJointIndices.z)] +
-//    inJointWeights.w * jointTransformsUbo.jointMatrices[int(inJointIndices.w)];
 
-
-    vec4 jointXCoord =  inverseBindMatricesUbo.inverseBindMatrices[inJointIndices.x] * ubo.jointTransformMatrices[inJointIndices.x]   * vec4(inPosition, 1.0f);
-    vec4 jointYCoord =inverseBindMatricesUbo.inverseBindMatrices[inJointIndices.y] * ubo.jointTransformMatrices[inJointIndices.y] *   vec4(inPosition, 1.0f);
-    vec4 jointZCoord = inverseBindMatricesUbo.inverseBindMatrices[inJointIndices.z] * ubo.jointTransformMatrices[inJointIndices.z] *  vec4(inPosition, 1.0f);
-    vec4 jointWfCoord = inverseBindMatricesUbo.inverseBindMatrices[inJointIndices.w] * ubo.jointTransformMatrices[inJointIndices.w] *  vec4(inPosition, 1.0f);
-
-    vec4 skinnedPosition = inJointWeights.x * jointXCoord + inJointWeights.y * jointYCoord + inJointWeights.z * jointZCoord + inJointWeights.w * jointWfCoord;
 //
 //
 //
@@ -57,11 +59,24 @@ void main() {
 //    }
 //
 ////    vec4 skinnedPosition = skinMatrix * vec4(inPosition, 1.0);
-    gl_Position = ubo.proj * ubo.view * ubo.model * skinnedPosition;
+
+//    vec4 position = vec4(0.0);
+//
+//    for (int i = 0; i < 4; ++i) {
+//        int jointIndex = int(inJointIndices[i]);   // Get the joint index
+//        float weight = inJointWeights[i];          // Get the weight for this joint
+//
+//        mat4 jointTransform = ubo.jointTransformMatrices[jointIndex];  // Get the joint transformation matrix
+//        position += weight * (jointTransform * vec4(inPosition, 1.0)); // Apply transformation and accumulate
+//    }
+//
+//
+//    gl_Position = ubo.proj * ubo.view * ubo.model * position;
 //    gl_Position = ubo.proj * ubo.view  * inPosition;
 
+    gl_Position = calculatePosition();
     fragUV = inUV;
-    fragPos = vec3(ubo.model * skinnedPosition);
+    fragPos = inPosition;
     fragNorm = mat3(transpose(inverse(ubo.model))) * inNormal;
 }
 

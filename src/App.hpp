@@ -44,19 +44,23 @@ protected:
         }
 
         skin = skins[0];
-        camera.type  = Camera::CameraType::lookat;
+
+        for (auto &idx: skin->getJointIndices()) {
+            auto joint = skin->getJoint(idx);
+            std::cout << "Joint Name: " << joint->getName() << " Index: " << joint->getIndex() << std::endl;
+        }
+
+        camera.type = Camera::CameraType::lookat;
         camera.flipY = true;
-        camera.setPosition(glm::vec3(0.0f, 0.05f, -2.0f));
+        camera.setPosition(glm::vec3(0.0f, 0.75f, -2.0f));
         camera.setRotation(glm::vec3(0.0f, 0.0f, 0.0f));
-        camera.setPerspective(160.0f, Ar, 0.1f, 256.0f);
-
-
+        camera.setPerspective(60.0f, Ar, 0.1f, 256.0f);
 
 
         auto skinDPSZs = Skin::getPoolSizes();
         DPSZs.uniformBlocksInPool = skinDPSZs.uniformBlocksInPool; // 2 more uniform blocks
-        DPSZs.texturesInPool =  skinDPSZs.texturesInPool ;       // 5 textures
-        DPSZs.setsInPool =  skinDPSZs.setsInPool;       // 1 more descriptor sets
+        DPSZs.texturesInPool = skinDPSZs.texturesInPool;       // 5 textures
+        DPSZs.setsInPool = skinDPSZs.setsInPool;       // 1 more descriptor sets
 
         skin->init(this, &camera, "assets/models/CesiumMan/glTF/CesiumMan_img0.jpg");
 

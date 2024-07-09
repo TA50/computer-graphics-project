@@ -73,24 +73,24 @@ public:
 
     static PoolSizes getPoolSizes() {
         PoolSizes DPSZs = {};
-        DPSZs.uniformBlocksInPool = 1;
+        DPSZs.uniformBlocksInPool = 2;
         DPSZs.texturesInPool = 0;
         DPSZs.setsInPool = 2;
         return DPSZs;
     }
 
-    void init(BaseProject *bp, Camera *camera) {
+    void init(BaseProject *bp, Camera *_camera) {
         BP = bp;
-        camera = camera;
+        camera = _camera;
         VD.init(bp, SkinVertex::getBindingDescription(), SkinVertex::getDescriptorElements());
         DSL.init(bp, {
-                {Mvp_BINDING,               VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
-                {InverseBindMatrix_BINDING, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
+                {Mvp_BINDING,               VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(SkinMvpObject),               1},
+                {InverseBindMatrix_BINDING, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(SkinInverseBindMatrixObject), 1}
         });
 
         P.init(bp, &VD, VERT_SHADER, FRAG_SHADER, {&DSL});
         P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
-                                    VK_CULL_MODE_BACK_BIT, false);
+                              VK_CULL_MODE_BACK_BIT, false);
         createVertexBuffer();
         createIndexBuffer();
 
@@ -99,13 +99,15 @@ public:
 
     void createPipelineAndDescriptorSets() {
         P.create();
+        std::cout << "[Skin]: Pipeline created\n";
         DS.init(BP, &DSL, {});
+        std::cout << "[Skin]: Descriptor Set Created\n";
     }
 
     void bind(VkCommandBuffer commandBuffer, int currentImage) {
         P.bind(commandBuffer);
-        DS.bind(commandBuffer, P, Mvp_SET, currentImage);
-        DS.bind(commandBuffer, P, InverseBindMatrix_SET, currentImage);
+        DS.bind(commandBuffer, P, InverseBinding_Mvp_SET, currentImage);
+
         //vertex and index buffers
 
         VkBuffer vertexBuffers[] = {vertexBuffer};
@@ -137,7 +139,8 @@ public:
 
         DS.map(currentImage, &mvpObject, Mvp_BINDING);
     }
-    void pipelinesAndDescriptorSetsCleanup(){
+
+    void pipelinesAndDescriptorSetsCleanup() {
         DS.cleanup();
         P.cleanup();
     }
@@ -271,12 +274,11 @@ protected:
     const std::string FRAG_SHADER = "assets/shaders/bin/skinning.frag.spv";
     const uint32_t Mvp_BINDING = 0;
     const uint32_t InverseBindMatrix_BINDING = 1;
-    const uint32_t Mvp_SET = 0;
-    const uint32_t InverseBindMatrix_SET = 1;
+    const uint32_t InverseBinding_Mvp_SET = 0;
 
 
     void createVertexBuffer() {
-        VkDeviceSize bufferSize = vertices.size();
+        VkDeviceSize bufferSize = sizeof(SkinVertex) * vertices.size();
 
         BP->createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
@@ -287,7 +289,7 @@ protected:
         vkMapMemory(BP->device, vertexBufferMemory, 0, bufferSize, 0, &data);
         memcpy(data, vertices.data(), (size_t) bufferSize);
         vkUnmapMemory(BP->device, vertexBufferMemory);
-
+        std::cout << "[Skin] Vertex buffer created\n";
     }
 
     void createIndexBuffer() {
@@ -302,5 +304,7 @@ protected:
         vkMapMemory(BP->device, indexBufferMemory, 0, bufferSize, 0, &data);
         memcpy(data, indices.data(), (size_t) bufferSize);
         vkUnmapMemory(BP->device, indexBufferMemory);
+
+        std::cout << "[Skin] Index buffer created\n";
     }
 };

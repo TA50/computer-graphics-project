@@ -12,8 +12,8 @@ layout(set = 0, binding = 0) uniform UBO {
     mat4 proj;
 } ubo;
 
-layout(set = 1, binding = 1) uniform JointUBO {
-    mat4 jointMatrices[MAX_JOINTS];
+layout(set = 0, binding = 1) uniform JointUBO {
+    mat4 jointMatrices[100];
 } jointTransformsUbo;
 
 layout(location = 0) out vec3 fragNormal;
@@ -21,10 +21,10 @@ layout(location = 1) out vec2 fragUV;
 
 void main() {
     mat4 skinMatrix =
-    inJointWeights.x * joints.jointMatrices[int(inJointIndices.x)] +
-    inJointWeights.y * joints.jointMatrices[int(inJointIndices.y)] +
-    inJointWeights.z * joints.jointMatrices[int(inJointIndices.z)] +
-    inJointWeights.w * joints.jointMatrices[int(inJointIndices.w)];
+    inJointWeights.x * jointTransformsUbo.jointMatrices[int(inJointIndices.x)] +
+    inJointWeights.y * jointTransformsUbo.jointMatrices[int(inJointIndices.y)] +
+    inJointWeights.z * jointTransformsUbo.jointMatrices[int(inJointIndices.z)] +
+    inJointWeights.w * jointTransformsUbo.jointMatrices[int(inJointIndices.w)];
 
     vec4 skinnedPosition = skinMatrix * vec4(inPosition, 1.0);
     gl_Position = ubo.proj * ubo.view * ubo.model * skinnedPosition;

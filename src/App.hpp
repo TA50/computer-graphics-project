@@ -8,15 +8,9 @@
 
 class App : public BaseProject {
 protected:
-
-
-
     Skin *skin;
-
-
     glm::vec3 CamPos = glm::vec3(0.0, 0.1, 5.0);
     glm::mat4 ViewMatrix;
-
     float Ar;
 
     Camera camera;
@@ -71,8 +65,6 @@ protected:
         std::cout << "Textures in the Pool        : " << DPSZs.texturesInPool << "\n";
         std::cout << "Descriptor Sets in the Pool : " << DPSZs.setsInPool << "\n";
 
-
-        std::cout << "Local initialization completed!\n";
 
     }
 

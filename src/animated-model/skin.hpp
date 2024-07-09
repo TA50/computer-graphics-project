@@ -7,6 +7,8 @@
 #include "animated-model/joint.hpp"
 #include "camera.hpp"
 #include "printer.hpp"
+#include "helper-structs.hpp"
+#include "animated-model/animation.hpp"
 
 #define MAX_JOINTS_COUNT 100
 
@@ -17,6 +19,7 @@ public:
     glm::vec2 uv;
     glm::ivec4 jointIndices;
     glm::vec4 jointWeights;
+    glm::vec3 inColor;
 
     static std::vector<VertexBindingDescriptorElement> getBindingDescription() {
         return {
@@ -35,7 +38,11 @@ public:
                 {0, 3, VK_FORMAT_R32G32B32A32_SINT,   static_cast<uint32_t >(offsetof(SkinVertex,
                                                                                       jointIndices)), sizeof(glm::vec4), OTHER},
                 {0, 4, VK_FORMAT_R32G32B32A32_SFLOAT, static_cast<uint32_t >(offsetof(SkinVertex,
-                                                                                      jointWeights)), sizeof(glm::vec4), OTHER}
+                                                                                      jointWeights)), sizeof(glm::vec4), OTHER},
+
+                {0, 5, VK_FORMAT_R32G32B32A32_SFLOAT, static_cast<uint32_t >(offsetof(SkinVertex,
+                                                                                      inColor)), sizeof(glm::vec3), COLOR}
+
         };
     }
 };
@@ -45,6 +52,7 @@ struct SkinMvpObject {
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 projection;
     alignas(16) glm::mat4 jointTransformMatrices[MAX_JOINTS_COUNT];
+    glm::vec4 lightPos = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
 };
 
 struct SkinInverseBindMatrixObject {
@@ -53,6 +61,7 @@ struct SkinInverseBindMatrixObject {
 
 class Skin {
 public:
+    std::vector<Animation> animations;
     explicit Skin(std::string name, int jointsCount) : name(std::move(name)), jointsCount(jointsCount) {
         rootJointIndex = -1;
 
@@ -64,10 +73,6 @@ public:
         indices = std::vector<uint32_t>();
 
         BP = nullptr;
-//        P = Pipeline();
-//        VD = VertexDescriptor();
-//        DSL = DescriptorSetLayout();
-//        DS = DescriptorSet();
 
 
     }
@@ -98,17 +103,13 @@ public:
         createVertexBuffer();
         createIndexBuffer();
 
-
-//        updateJointMatrices(joints[rootJointIndex]);
         updateJointMatrices();
 
     }
 
     void createPipelineAndDescriptorSets() {
         P.create();
-        std::cout << "[Skin]: Pipeline created\n";
         DS.init(BP, &DSL, {&BaseTexture});
-        std::cout << "[Skin]: Descriptor Set Created\n";
     }
 
     void bind(VkCommandBuffer commandBuffer, int currentImage) {
@@ -132,23 +133,10 @@ public:
         modelMatrix = getModelMatrix();
     }
 
-    void updateUniformBuffers(uint32_t currentImage) {
-
+    void render(uint32_t currentImage, AxisInput input, float frameTime) {
+        updateAnimation(frameTime);
         updateJointMatrices();
-
-        std::cout << "Updating uniform buffers\n";
-        SkinMvpObject mvpObject{};
-//        mvpObject.model = glm::translate(glm::scale(modelMatrix, glm::vec3(4)), glm::vec3(-0.3, -0.4, 0.3));
-        mvpObject.model = getJointMatrix(rootJoint);
-        mvpObject.view = camera->matrices.view ;
-        mvpObject.projection = camera->matrices.perspective;
-
-        for (auto &[index, matrix]: jointMatrices) {
-            mvpObject.jointTransformMatrices[index] = matrix;
-        }
-
-
-        DS.map(currentImage, &mvpObject, Mvp_BINDING);
+        updateUniformBuffers(currentImage);
     }
 
     void pipelinesAndDescriptorSetsCleanup() {
@@ -172,7 +160,6 @@ public:
     void addJoint(Joint *joint, glm::mat4 inverseBindMatrix, int jointIndex) {
         joints[jointIndex] = joint;
         inverseBindMatrices[jointIndex] = inverseBindMatrix;
-        joint->updateTransformedMatrix();
         jointMatrices[jointIndex] = joint->getTransformedMatrix();
         joints[jointIndex] = joint;
     }
@@ -186,6 +173,10 @@ public:
     }
 
 
+    void addAnimation(const Animation& animation) {
+        animations.push_back(animation);
+    }
+
 
     // Setters
 
@@ -194,6 +185,9 @@ public:
         rootJoint = joint;
     }
 
+    void setActiveAnimation(uint32_t index) {
+        activeAnimation = index;
+    }
 
     // Getters
     Joint *getJoint(int index) {
@@ -247,11 +241,62 @@ public:
     }
 
 
+    void updateAnimation(float deltaTime) {
+
+        if (activeAnimation > static_cast<uint32_t>(animations.size()) - 1) {
+            std::cout << "No animation with index " << activeAnimation << std::endl;
+            return;
+        }
+        auto  animation  = &animations[activeAnimation];
+        animation->currentTime += deltaTime;
+        if (animation->currentTime > animation->end) {
+            animation->currentTime -= animation->end;
+        }
+
+        for (auto &channel: animation->channels) {
+            auto sampler = animation->samplers[channel.samplerIndex];
+            for (size_t i = 0; i < sampler.inputs.size() - 1; i++) {
+                if (sampler.interpolation != "LINEAR") {
+                    std::cout << "This sample only supports linear interpolations\n";
+                    continue;
+                }
+
+                // Get the input keyframe values for the current time stamp
+                if ((animation->currentTime >= sampler.inputs[i]) &&
+                    (animation->currentTime <= sampler.inputs[i + 1])) {
+                    float a = (animation->currentTime - sampler.inputs[i]) /
+                              (sampler.inputs[i + 1] - sampler.inputs[i]);
+                    if (channel.path == "translation") {
+                        channel.joint->translation = glm::mix(sampler.outputsVec4[i], sampler.outputsVec4[i + 1], a);
+                    }
+
+                    if (channel.path == "rotation") {
+                        glm::quat q1;
+                        q1.x = sampler.outputsVec4[i].x;
+                        q1.y = sampler.outputsVec4[i].y;
+                        q1.z = sampler.outputsVec4[i].z;
+                        q1.w = sampler.outputsVec4[i].w;
+
+                        glm::quat q2;
+                        q2.x = sampler.outputsVec4[i + 1].x;
+                        q2.y = sampler.outputsVec4[i + 1].y;
+                        q2.z = sampler.outputsVec4[i + 1].z;
+                        q2.w = sampler.outputsVec4[i + 1].w;
+
+                        channel.joint->rotation = glm::normalize(glm::slerp(q1, q2, a));
+                    }
+                    if (channel.path == "scale") {
+                        channel.joint->scale = glm::mix(sampler.outputsVec4[i], sampler.outputsVec4[i + 1], a);
+                    }
+                }
+            }
+        }
+
+    }
+
     void updateJointMatrices() {
 
         auto rootMat = getJointMatrix(rootJoint);
-        std::cout << "Root matrix: " << rootJoint->getIndex() << std::endl;
-        Printer::printArrArr(rootMat);
 
         glm::mat4 inverseTransform = glm::inverse(rootMat);
         for (auto &[index, joint]: joints) {
@@ -261,15 +306,11 @@ public:
             jointMatrices[index] = inverseTransform * jointMatrices[index];
 
         }
-        std::cout << "joint global matrix: 3" << std::endl;
-        Printer::printArrArr(getJointMatrix(joints[3]));
-        std::cout << "Joint Mat for joint 3" << std::endl;
-        Printer::printArrArr(jointMatrices[3]);
 
 
     }
 
-    glm::mat4 getJointMatrix(Joint *joint) {
+    static glm::mat4 getJointMatrix(Joint *joint) {
         glm::mat4 jointMatrix = joint->getTransformedMatrix();
         Joint *currentParent = joint->parent;
         while (currentParent) {
@@ -279,8 +320,11 @@ public:
         return jointMatrix;
     }
 
+
 protected:
     glm::mat4 modelMatrix;
+
+    uint32_t activeAnimation = 0;
     int rootJointIndex;
     Joint *rootJoint;
     int jointsCount;
@@ -343,7 +387,7 @@ protected:
         vkMapMemory(BP->device, vertexBufferMemory, 0, bufferSize, 0, &data);
         memcpy(data, vertices.data(), (size_t) bufferSize);
         vkUnmapMemory(BP->device, vertexBufferMemory);
-        std::cout << "[Skin] Vertex buffer created\n";
+
     }
 
     void createIndexBuffer() {
@@ -359,6 +403,27 @@ protected:
         memcpy(data, indices.data(), (size_t) bufferSize);
         vkUnmapMemory(BP->device, indexBufferMemory);
 
-        std::cout << "[Skin] Index buffer created\n";
+
     }
+
+
+    void updateUniformBuffers(uint32_t currentImage) {
+
+        SkinMvpObject mvpObject{};
+        mvpObject.model =modelMatrix;
+        mvpObject.view = camera->matrices.view;
+        mvpObject.projection = camera->matrices.perspective;
+
+        for (auto &[index, matrix]: jointMatrices) {
+            mvpObject.jointTransformMatrices[index] = matrix;
+        }
+
+
+        DS.map(currentImage, &mvpObject, Mvp_BINDING);
+    }
+
+
+
+
+
 };

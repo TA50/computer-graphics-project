@@ -41,6 +41,7 @@ void main() {
     outUV = inUV;
 
    mat4 skinMat = calcSkinMat();
+    mat4 viewModel = ubo.view * ubo.model;
     gl_Position = ubo.proj * viewModel * skinMat * vec4(inPosition.xyz, 1.0);
 
     outNormal = normalize(transpose(inverse(mat3(viewModel * skinMat))) * inNormal);

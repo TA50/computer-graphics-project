@@ -37,9 +37,9 @@ protected:
 
 
     void localInit() {
-//        tinygltf::Model model = GltfLoader::loadGlTFFile("assets/models/CesiumMan/glTF-Embedded/CesiumMan.gltf");
-//        tinygltf::Model model = GltfLoader::loadGlTFFile("assets/models/CesiumMan/glTF/CesiumMan.gltf");
-        tinygltf::Model model = GltfLoader::loadGlTFFile("assets/models/pepsiman/scene.gltf");
+
+        tinygltf::Model model = GltfLoader::loadGlTFFile("assets/models/CesiumMan/glTF/CesiumMan.gltf");
+//        tinygltf::Model model = GltfLoader::loadGlTFFile("assets/models/pepsiman/scene.gltf");
         std::vector<Skin *> skins{};
         for (const auto &skin: model.skins) {
             skins.push_back(new Skin(GltfLoader::loadSkin(model, skin)));
@@ -47,7 +47,7 @@ protected:
 
         skin = skins[0];
 
-         GltfLoader::loadAnimations(skin, model);
+        GltfLoader::loadAnimations(skin, model);
 
         for (auto &idx: skin->getJointIndices()) {
             auto joint = skin->getJoint(idx);
@@ -66,8 +66,8 @@ protected:
         DPSZs.texturesInPool = skinDPSZs.texturesInPool;       // 5 textures
         DPSZs.setsInPool = skinDPSZs.setsInPool;       // 1 more descriptor sets
 
-        skin->init(this, &camera, "assets/models/pepsiman/textures/Pepsiman_baseColor.png");
-//        skin->init(this, &camera, "assets/models/CesiumMan/glTF/CesiumMan_img0.jpg");
+//        skin->init(this, &camera, "assets/models/pepsiman/textures/Pepsiman_baseColor.png");
+        skin->init(this, &camera, "assets/models/CesiumMan/glTF/CesiumMan_img0.jpg");
 
 
     }
@@ -112,11 +112,15 @@ protected:
         bool fire = false;
         getSixAxis(deltaT, m, r, fire);
 
+
+        camera.rotate(glm::vec3(r.x * camera.rotationSpeed, -r.y * camera.rotationSpeed, 0.0f));
+
+
         AxisInput axisInput{};
         axisInput.axis = m;
         axisInput.rotation = r;
         axisInput.deltaTime = deltaT;
-        skin->render( currentImage, axisInput, frameTime);
+        skin->render(currentImage, axisInput, frameTime);
 
 
     }

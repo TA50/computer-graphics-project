@@ -1,4 +1,5 @@
 #pragma  once
+
 #include "animated-model/skin.hpp"
 
 
@@ -112,6 +113,8 @@ public:
             vertex.jointWeights = glm::vec4(weightData[i * 4], weightData[i * 4 + 1], weightData[i * 4 + 2],
                                             weightData[i * 4 + 3]);
 
+            vertex.inColor = glm::vec4(1.0f);
+
             skin.addVertex(vertex);
         }
 
@@ -219,25 +222,22 @@ public:
                     switch (accessor.type) {
                         case TINYGLTF_TYPE_VEC3: {
                             const glm::vec3 *buf = static_cast<const glm::vec3 *>(dataPtr);
-//                            dstSampler.outputsVec4.resize(accessor.count);
                             for (size_t index = 0; index < accessor.count; index++) {
                                 alignas(16) auto b = buf[index];
-                                glm::vec4 v = glm::vec4(0.0f);
+                                auto v = glm::vec4(0.0f);
                                 v.x = b[0];
                                 v.y = b[1];
                                 v.z = b[2];
 
                                 dstSampler.outputsVec4.push_back(v);
-//                                dstSampler.outputsVec4[index] = glm::vec4(buf[index], 0.0f);
                             }
                             break;
                         }
                         case TINYGLTF_TYPE_VEC4: {
-                            const glm::vec4 *buf = static_cast<const glm::vec4 *>(dataPtr);
+                            alignas(16) const auto *buf = static_cast<const glm::vec4 *>(dataPtr);
 //                            dstSampler.outputsVec4.resize(accessor.count);
                             for (size_t index = 0; index < accessor.count; index++) {
                                 dstSampler.outputsVec4.push_back(buf[index]);
-//                                dstSampler.outputsVec4[index] = buf[index];
                             }
                             break;
                         }
@@ -248,11 +248,6 @@ public:
                     }
                 }
 
-                std::cout << "Sampler: " << j << std::endl;
-                for (auto &output: dstSampler.outputsVec4) {
-                    std::cout << "Output: " << output.x << " " << output.y << " " << output.z << " " << output.w
-                              << std::endl;
-                }
             }
 
 

@@ -19,6 +19,7 @@ public:
     glm::vec2 uv;
     glm::ivec4 jointIndices;
     glm::vec4 jointWeights;
+    glm::vec3 inColor;
 
     static std::vector<VertexBindingDescriptorElement> getBindingDescription() {
         return {
@@ -37,7 +38,11 @@ public:
                 {0, 3, VK_FORMAT_R32G32B32A32_SINT,   static_cast<uint32_t >(offsetof(SkinVertex,
                                                                                       jointIndices)), sizeof(glm::vec4), OTHER},
                 {0, 4, VK_FORMAT_R32G32B32A32_SFLOAT, static_cast<uint32_t >(offsetof(SkinVertex,
-                                                                                      jointWeights)), sizeof(glm::vec4), OTHER}
+                                                                                      jointWeights)), sizeof(glm::vec4), OTHER},
+
+                {0, 5, VK_FORMAT_R32G32B32A32_SFLOAT, static_cast<uint32_t >(offsetof(SkinVertex,
+                                                                                      inColor)), sizeof(glm::vec3), COLOR}
+
         };
     }
 };
@@ -47,6 +52,7 @@ struct SkinMvpObject {
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 projection;
     alignas(16) glm::mat4 jointTransformMatrices[MAX_JOINTS_COUNT];
+    glm::vec4 lightPos = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
 };
 
 struct SkinInverseBindMatrixObject {
@@ -103,9 +109,7 @@ public:
 
     void createPipelineAndDescriptorSets() {
         P.create();
-        std::cout << "[Skin]: Pipeline created\n";
         DS.init(BP, &DSL, {&BaseTexture});
-        std::cout << "[Skin]: Descriptor Set Created\n";
     }
 
     void bind(VkCommandBuffer commandBuffer, int currentImage) {
@@ -383,7 +387,7 @@ protected:
         vkMapMemory(BP->device, vertexBufferMemory, 0, bufferSize, 0, &data);
         memcpy(data, vertices.data(), (size_t) bufferSize);
         vkUnmapMemory(BP->device, vertexBufferMemory);
-        std::cout << "[Skin] Vertex buffer created\n";
+
     }
 
     void createIndexBuffer() {
@@ -399,7 +403,7 @@ protected:
         memcpy(data, indices.data(), (size_t) bufferSize);
         vkUnmapMemory(BP->device, indexBufferMemory);
 
-        std::cout << "[Skin] Index buffer created\n";
+
     }
 
 

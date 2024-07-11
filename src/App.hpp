@@ -18,6 +18,8 @@ protected:
 
     GameObject *sphere = new GameObject();
     GameObject *ground = new GameObject();
+    GameObject *road = new GameObject();
+
 
     // Here you set the main application parameters
     void setWindowParameters() {
@@ -52,6 +54,14 @@ protected:
         sphere->setModel("assets/models/sphere.obj", ModelType::OBJ);
         sphere->setBaseTexture("assets/textures/brown_mud.jpg", VK_FORMAT_R8G8B8A8_UNORM, true);
 
+        road->setName("Road");
+        road->setModel("assets/models/SPW_Medieval_Road_01.mgcg", ModelType::MGCG);
+        road->setBaseTexture("assets/textures/SPW_Natures_02.png", VK_FORMAT_R8G8B8A8_UNORM, true);
+        road->setCullMode(VK_CULL_MODE_NONE);
+//        road->scale(glm::vec3(20.0f, 1.0f, 1.0f));
+        road->rotate(90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+        road->rotate(90.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+        road->move(glm::vec3(0.0f, 0.5f, -0.1f));
 
         ground->setModel("assets/models/SPW_Terrain_Grass_Flat.mgcg", MGCG);
         ground->setName("ground");
@@ -67,7 +77,8 @@ protected:
         camera.flipY = true;
         camera.setPosition(glm::vec3(0.0f, 0.75f, -2.0f));
         camera.setRotation(glm::vec3(0.0f, 0.0f, 0.0f));
-        camera.setPerspective(120.0f, Ar, 0.1f, 256.0f);
+        camera.setPerspective(90.0f, Ar, 0.1f, 256.0f);
+        camera.setAspectRatio(Ar);
     }
 
     void localInit() {
@@ -79,15 +90,21 @@ protected:
         DPSZs.uniformBlocksInPool =
                 skinDPSZs.uniformBlocksInPool
                 + modelPoolSizes.uniformBlocksInPool
-                + groundPoolSizes.uniformBlocksInPool;
+                + groundPoolSizes.uniformBlocksInPool
+                + road->getPoolSizes().uniformBlocksInPool
+                ;
         DPSZs.texturesInPool =
-                skinDPSZs.texturesInPool + modelPoolSizes.texturesInPool + groundPoolSizes.texturesInPool;
-        DPSZs.setsInPool = skinDPSZs.setsInPool + modelPoolSizes.setsInPool + groundPoolSizes.setsInPool;
+                skinDPSZs.texturesInPool + modelPoolSizes.texturesInPool +
+                groundPoolSizes.texturesInPool + road->getPoolSizes().texturesInPool;
+        DPSZs.setsInPool = skinDPSZs.setsInPool + modelPoolSizes.setsInPool + groundPoolSizes.setsInPool + road->getPoolSizes().setsInPool;
 
 
-        skin->init(this, &camera, "assets/models/scanned_animated_walking_man/textures/rp_nathan_animated_003_mat_baseColor.jpeg");
+        skin->init(this, &camera,
+                   "assets/models/pepsiman/textures/Pepsiman_baseColor.png");
         sphere->init(this, &camera);
         ground->init(this, &camera);
+        road->init(this, &camera);
+
 
     }
 
@@ -97,6 +114,7 @@ protected:
         skin->createPipelineAndDescriptorSets();
         sphere->pipelinesAndDescriptorSetsInit();
         ground->pipelinesAndDescriptorSetsInit();
+        road->pipelinesAndDescriptorSetsInit();
         std::cout << "Pipelines and Descriptor Sets initialization completed!\n";
     }
 
@@ -106,6 +124,7 @@ protected:
 
         sphere->pipelinesAndDescriptorSetsCleanup();
         ground->pipelinesAndDescriptorSetsCleanup();
+        road->pipelinesAndDescriptorSetsCleanup();
 
     }
 
@@ -114,6 +133,7 @@ protected:
         skin->localCleanup();
         sphere->localCleanup();
         ground->localCleanup();
+        road->localCleanup();
     }
 
 
@@ -122,6 +142,8 @@ protected:
         skin->bind(commandBuffer, currentImage);
 //        sphere->populateCommandBuffer(commandBuffer, currentImage);
         ground->populateCommandBuffer(commandBuffer, currentImage);
+        road->populateCommandBuffer(commandBuffer, currentImage);
+
 
     }
 
@@ -132,10 +154,9 @@ protected:
         glm::vec3 m = glm::vec3(0.0f), r = glm::vec3(0.0f);
         bool fire = false;
         getSixAxis(deltaT, m, r, fire);
-        r.x = 0;
 
         camera.rotate(glm::vec3(r.x * camera.rotationSpeed, -r.y * camera.rotationSpeed, 0.0f));
-
+        camera.zoom(m.z * camera.zoomSpeed);
 
         AxisInput axisInput{};
         axisInput.axis = m;
@@ -144,6 +165,7 @@ protected:
         skin->render(currentImage, axisInput, frameTime);
 //        sphere->render(currentImage);
         ground->render(currentImage);
+        road->render(currentImage);
 
 
     }

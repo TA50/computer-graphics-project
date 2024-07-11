@@ -4,12 +4,15 @@
 #include "modules/Starter.hpp"
 #include "camera.hpp"
 #include "common.hpp"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+
 
 struct GameObjectVertex {
     glm::vec3 pos;
     glm::vec3 normal;
     glm::vec2 uv;
-    glm::vec3 inColor;
+    glm::vec4 inColor = glm::vec4(1.0f);
 
     static std::vector<VertexBindingDescriptorElement> getBindingDescription() {
         return {
@@ -26,7 +29,7 @@ struct GameObjectVertex {
                 {0, 2, VK_FORMAT_R32G32_SFLOAT,       static_cast<uint32_t >(offsetof(GameObjectVertex,
                                                                                       uv)),      sizeof(glm::vec2), UV},
                 {0, 3, VK_FORMAT_R32G32B32A32_SFLOAT, static_cast<uint32_t >(offsetof(GameObjectVertex,
-                                                                                      inColor)), sizeof(glm::vec3), COLOR}
+                                                                                      inColor)), sizeof(glm::vec4), COLOR}
         };
     }
 };
@@ -43,11 +46,15 @@ public:
         name = n;
     }
 
-    void setVertices(std::vector<GameObjectVertex> &v) {
+    void setCullMode(VkCullModeFlagBits flag) {
+        this->cullMode = flag;
+    }
+
+    void setVertices(std::vector<GameObjectVertex> v) {
         vertices = v;
     }
 
-    void setIndices(std::vector<uint32_t> &i) {
+    void setIndices(std::vector<uint32_t> i) {
         indices = i;
     }
 
@@ -87,6 +94,8 @@ public:
 
 
         P.init(BP, &VD, VERT_SHADER, FRAG_SHADER, {&DSL});
+        P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
+                              cullMode, false);
 
         if (loaded) {
             M.init(bp, &VD, modelPath, modelType);
@@ -147,8 +156,11 @@ public:
     }
 
     void render(uint32_t currentImage) {
-        GameObjectUniformBufferObject ubo = GameObjectUniformBufferObject(Wm, camera->matrices.view,
+        GameObjectUniformBufferObject ubo = GameObjectUniformBufferObject(Wm,
+                                                                          camera->matrices.view,
                                                                           camera->matrices.perspective);
+
+
         DS.map((int) currentImage, &ubo, (int) SET_ID);
     }
 
@@ -161,8 +173,8 @@ public:
         Wm = glm::scale(Wm, scale);
     }
 
-    void rotate(float angle, glm::vec3 axis) {
-        Wm = glm::rotate(Wm, angle, axis);
+    void rotate(float degrees, glm::vec3 axis) {
+        Wm = glm::rotate(Wm, glm::radians(degrees), axis);
     }
 
 private:
@@ -171,6 +183,8 @@ private:
     BaseProject *BP{};
 
     Pipeline P;
+    VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT;
+
     DescriptorSet DS;
     DescriptorSetLayout DSL;
     VertexDescriptor VD;
@@ -186,7 +200,7 @@ private:
     ModelType modelType;
 
     std::vector<GameObjectVertex> vertices;
-    glm::mat4 Wm{};
+    glm::mat4 Wm = glm::mat4(1.0f);
     std::vector<unsigned char> loadedModelVertices{};
     bool loaded = false;
     std::vector<uint32_t> indices;

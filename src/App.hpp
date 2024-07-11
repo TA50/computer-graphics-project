@@ -16,7 +16,8 @@ protected:
 
     Camera camera;
 
-    GameObject * sphere = new GameObject();
+    GameObject *sphere = new GameObject();
+    GameObject *ground = new GameObject();
 
     // Here you set the main application parameters
     void setWindowParameters() {
@@ -29,7 +30,6 @@ protected:
 
         Ar = (float) windowWidth / (float) windowHeight;
 
-
     }
 
     // What to do when the window changes size
@@ -38,11 +38,8 @@ protected:
         Ar = (float) w / (float) h;
     }
 
-
-    void localInit() {
-
-        tinygltf::Model model = GltfLoader::loadGlTFFile("assets/models/CesiumMan/glTF/CesiumMan.gltf");
-//        tinygltf::Model model = GltfLoader::loadGlTFFile("assets/models/pepsiman/scene.gltf");
+    void loadModels() {
+        tinygltf::Model model = GltfLoader::loadGlTFFile("assets/models/pepsiman/scene.gltf");
         std::vector<Skin *> skins{};
         for (const auto &skin: model.skins) {
             skins.push_back(new Skin(GltfLoader::loadSkin(model, skin)));
@@ -55,25 +52,42 @@ protected:
         sphere->setModel("assets/models/sphere.obj", ModelType::OBJ);
         sphere->setBaseTexture("assets/textures/brown_mud.jpg", VK_FORMAT_R8G8B8A8_UNORM, true);
 
-        sphere->init(this, &camera);
 
+        ground->setModel("assets/models/SPW_Terrain_Grass_Flat.mgcg", MGCG);
+        ground->setName("ground");
+        ground->setBaseTexture("assets/textures/SPW_Natures_02.png", VK_FORMAT_R8G8B8A8_UNORM, true);
+//        ground->rotate(30.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+        ground->rotate(90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+        ground->scale(glm::vec3(20.0f));
+        ground->setCullMode(VK_CULL_MODE_NONE);
+    }
+
+    void setCamera() {
         camera.type = Camera::CameraType::lookat;
         camera.flipY = true;
         camera.setPosition(glm::vec3(0.0f, 0.75f, -2.0f));
         camera.setRotation(glm::vec3(0.0f, 0.0f, 0.0f));
-        camera.setPerspective(60.0f, Ar, 0.1f, 256.0f);
+        camera.setPerspective(120.0f, Ar, 0.1f, 256.0f);
+    }
 
-
+    void localInit() {
+        loadModels();
+        setCamera();
         auto modelPoolSizes = sphere->getPoolSizes();
-
+        auto groundPoolSizes = ground->getPoolSizes();
         auto skinDPSZs = Skin::getPoolSizes();
-        DPSZs.uniformBlocksInPool = skinDPSZs.uniformBlocksInPool + modelPoolSizes.uniformBlocksInPool; // 2 more uniform blocks
-        DPSZs.texturesInPool = skinDPSZs.texturesInPool + modelPoolSizes.texturesInPool;       // 5 textures
-        DPSZs.setsInPool = skinDPSZs.setsInPool + modelPoolSizes.setsInPool;       // 1 more descriptor sets
+        DPSZs.uniformBlocksInPool =
+                skinDPSZs.uniformBlocksInPool
+                + modelPoolSizes.uniformBlocksInPool
+                + groundPoolSizes.uniformBlocksInPool;
+        DPSZs.texturesInPool =
+                skinDPSZs.texturesInPool + modelPoolSizes.texturesInPool + groundPoolSizes.texturesInPool;
+        DPSZs.setsInPool = skinDPSZs.setsInPool + modelPoolSizes.setsInPool + groundPoolSizes.setsInPool;
 
-//        skin->init(this, &camera, "assets/models/pepsiman/textures/Pepsiman_baseColor.png");
-        skin->init(this, &camera, "assets/models/CesiumMan/glTF/CesiumMan_img0.jpg");
 
+        skin->init(this, &camera, "assets/models/scanned_animated_walking_man/textures/rp_nathan_animated_003_mat_baseColor.jpeg");
+        sphere->init(this, &camera);
+        ground->init(this, &camera);
 
     }
 
@@ -82,6 +96,7 @@ protected:
 
         skin->createPipelineAndDescriptorSets();
         sphere->pipelinesAndDescriptorSetsInit();
+        ground->pipelinesAndDescriptorSetsInit();
         std::cout << "Pipelines and Descriptor Sets initialization completed!\n";
     }
 
@@ -90,25 +105,23 @@ protected:
         skin->pipelinesAndDescriptorSetsCleanup();
 
         sphere->pipelinesAndDescriptorSetsCleanup();
+        ground->pipelinesAndDescriptorSetsCleanup();
 
     }
 
 
     void localCleanup() {
-
         skin->localCleanup();
         sphere->localCleanup();
-
+        ground->localCleanup();
     }
 
-    // Here it is the creation of the command buffer:
-    // You send to the GPU all the objects you want to draw,
-    // with their buffers and textures
 
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
 
         skin->bind(commandBuffer, currentImage);
-        sphere->populateCommandBuffer(commandBuffer, currentImage);
+//        sphere->populateCommandBuffer(commandBuffer, currentImage);
+        ground->populateCommandBuffer(commandBuffer, currentImage);
 
     }
 
@@ -119,7 +132,7 @@ protected:
         glm::vec3 m = glm::vec3(0.0f), r = glm::vec3(0.0f);
         bool fire = false;
         getSixAxis(deltaT, m, r, fire);
-
+        r.x = 0;
 
         camera.rotate(glm::vec3(r.x * camera.rotationSpeed, -r.y * camera.rotationSpeed, 0.0f));
 
@@ -129,7 +142,8 @@ protected:
         axisInput.rotation = r;
         axisInput.deltaTime = deltaT;
         skin->render(currentImage, axisInput, frameTime);
-        sphere->render(currentImage);
+//        sphere->render(currentImage);
+        ground->render(currentImage);
 
 
     }

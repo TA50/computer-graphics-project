@@ -2422,10 +2422,10 @@ void VertexDescriptor::init(BaseProject *bp, std::vector<VertexBindingDescriptor
 					Color.hasIt = true;
 					Color.offset = E[i].offset;
 				  } else {
-					std::cout << "Vertex Color - wrong size\n";
+//					std::cout << "Vertex Color - wrong size\n";
 				  }
 				} else {
-				  std::cout << "Vertex Color - wrong format\n";
+//				  std::cout << "Vertex Color - wrong format\n";
 				}
 			    break;
 			  case VertexDescriptorElementUsage::TANGENT:
@@ -2484,7 +2484,7 @@ void Model::loadModelOBJ(std::string file) {
 	std::vector<tinyobj::material_t> materials;
 	std::string warn, err;
 	
-	std::cout << "Loading : " << file << "[OBJ]\n";	
+
 	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
 						  file.c_str())) {
 		throw std::runtime_error(warn + err);
@@ -2553,7 +2553,6 @@ void Model::loadModelGLTF(std::string file, bool encoded) {
 	
 	int mainStride = VD->Bindings[0].stride;
 
-	std::cout << "Loading : " << file << (encoded ? "[MGCG]" : "[GLTF]") << "\n";	
 	if(encoded) {
 		auto modelString = readFile(file);
 		
@@ -2593,7 +2592,6 @@ void Model::loadModelGLTF(std::string file, bool encoded) {
 	}
 
 	for (const auto& mesh :  model.meshes) {
-		std::cout << "Primitives: " << mesh.primitives.size() << "\n";
 		for (const auto& primitive :  mesh.primitives) {
 			if (primitive.indices < 0) {
 				continue;
@@ -2749,14 +2747,12 @@ void Model::loadModelGLTF(std::string file, bool encoded) {
 					}
 					break;
 				default:
-					std::cerr << "Index component type " << accessor.componentType << " not supported!" << std::endl;
-					throw std::runtime_error("Error loading GLTF component");			
+					throw std::runtime_error("Error loading GLTF component");
 			}
 		}
 	}
 
-	std::cout << (encoded ? "[MGCG]" : "[GLTF]") << " Vertices: " << (vertices.size()/mainStride)
-			  << " Indices: " << indices.size() << "\n";
+
 /*
 std::cout << model.nodes[0].translation.size() << "\n";
 std::cout << model.nodes[0].rotation.size() << "\n";
@@ -2889,8 +2885,7 @@ void Texture::createTextureImage(std::vector<std::string>files, VkFormat Fmt = V
 			std::cout << "Not found: " << files[i] << "\n";
 			throw std::runtime_error("failed to load texture image!");
 		}
-		std::cout << "[" << i << "]" << files[i] << " -> size: " << texWidth
-				  << "x" << texHeight << ", ch: " << texChannels <<"\n";
+
 				  
 		if(i == 0) {
 			curWidth = texWidth;
@@ -3005,7 +3000,7 @@ void Texture::init(BaseProject *bp, std::string file, VkFormat Fmt = VK_FORMAT_R
 
 void Texture::initCubic(BaseProject *bp, std::vector<std::string>files, VkFormat Fmt = VK_FORMAT_R8G8B8A8_SRGB) {
 	if(files.size() != 6) {
-		std::cout << "\nError! Cube map without 6 files - " << files.size() << "\n";
+//		std::cout << "\nError! Cube map without 6 files - " << files.size() << "\n";
 		exit(0);
 	}
 	BP = bp;
@@ -3035,10 +3030,7 @@ void Pipeline::init(BaseProject *bp, VertexDescriptor *vd,
 	
 	auto vertShaderCode = readFile(VertShader);
 	auto fragShaderCode = readFile(FragShader);
-	std::cout << "Vertex shader <" << VertShader << "> len: " << 
-				vertShaderCode.size() << "\n";
-	std::cout << "Fragment shader <" << FragShader << "> len: " <<
-				fragShaderCode.size() << "\n";
+
 	
 	vertShaderModule =
 			createShaderModule(vertShaderCode);

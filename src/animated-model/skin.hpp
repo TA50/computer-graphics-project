@@ -41,7 +41,7 @@ public:
                                                                                       jointWeights)), sizeof(glm::vec4), OTHER},
 
                 {0, 5, VK_FORMAT_R32G32B32A32_SFLOAT, static_cast<uint32_t >(offsetof(SkinVertex,
-                                                                                      inColor)), sizeof(glm::vec3), COLOR}
+                                                                                      inColor)),      sizeof(glm::vec3), COLOR}
 
         };
     }
@@ -62,6 +62,7 @@ struct SkinInverseBindMatrixObject {
 class Skin {
 public:
     std::vector<Animation> animations;
+
     explicit Skin(std::string name, int jointsCount) : name(std::move(name)), jointsCount(jointsCount) {
         rootJointIndex = -1;
 
@@ -130,26 +131,37 @@ public:
                          static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
         mapInverseBindMatrices(currentImage);
-        modelMatrix = getModelMatrix();
     }
 
-    void render(uint32_t currentImage, AxisInput input, float frameTime) {
-        updateAnimation(frameTime);
+    void render(uint32_t currentImage, AxisInput input) {
+
         updateJointMatrices();
         updateUniformBuffers(currentImage);
     }
 
-//    void move(glm::vec3 translation) {
-//        rootJoint->translation += translation;
-//    }
+    void move(glm::vec3 translation) {
+        this->translation += translation;
+    }
 
-//    void rotate(glm::vec3 rotation) {
-//        rootJoint->rotation += rotation;
-//    }
+    void setWorldMatrix(glm::mat4 mat) {
+        worldMatrix = mat;
+    }
 
-//void scale(glm::vec3 scale) {
-//        rootJoint->scale += scale;
-//    }
+    void updateWorldMatrix() {
+
+        glm::mat4 rot = glm::rotate(glm::mat4(1.0f), glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+        rot = glm::rotate(rot, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+        rot = glm::rotate(rot, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        worldMatrix = glm::translate(glm::mat4(1.0f), translation) *
+                      rot *
+                      glm::scale(glm::mat4(1.0f), scaling);
+
+        translation = glm::vec3(0);
+        rotation = glm::vec3(0);
+        scaling = glm::vec3(1);
+    }
+
 
     void pipelinesAndDescriptorSetsCleanup() {
         DS.cleanup();
@@ -185,12 +197,24 @@ public:
     }
 
 
-    void addAnimation(const Animation& animation) {
+    void addAnimation(const Animation &animation) {
         animations.push_back(animation);
     }
 
 
     // Setters
+
+    void setTranslation(glm::vec3 translation) {
+        this->translation = translation;
+    }
+
+    void setScaling(glm::vec3 scaling) {
+        this->scaling = scaling;
+    }
+
+    void setRotation(glm::vec3 rotation) {
+        this->rotation = rotation;
+    }
 
     void setRootJoint(Joint *joint, int index) {
         rootJointIndex = index;
@@ -204,6 +228,11 @@ public:
     // Getters
     Joint *getJoint(int index) {
         return joints[index];
+    }
+
+    glm::vec3 getPosition() {
+    auto Wm = getModelMatrix();
+    return Wm[3];
     }
 
     glm::mat4 getInverseBindMatrix(int index) {
@@ -249,7 +278,19 @@ public:
 
 
     glm::mat4 getModelMatrix() {
-        return rootJoint->getGlobalMatrix();
+
+        auto M = getTransformedWorldMatrix();
+        return rootJoint->getGlobalMatrix() * M;
+    }
+
+    glm::mat4 getTransformedWorldMatrix(){
+        glm::mat4 M = worldMatrix;
+        M = glm::scale(M, scaling);
+        M = glm::rotate(M, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+        M = glm::rotate(M, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+        M = glm::rotate(M, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+        M = glm::translate(M, translation);
+        return M;
     }
 
 
@@ -259,7 +300,7 @@ public:
             std::cout << "No animation with index " << activeAnimation << std::endl;
             return;
         }
-        auto  animation  = &animations[activeAnimation];
+        auto animation = &animations[activeAnimation];
         animation->currentTime += deltaTime;
         if (animation->currentTime > animation->end) {
             animation->currentTime -= animation->end;
@@ -303,7 +344,6 @@ public:
                 }
             }
         }
-
     }
 
     void updateJointMatrices() {
@@ -334,7 +374,11 @@ public:
 
 
 protected:
-    glm::mat4 modelMatrix;
+
+    glm::mat4 worldMatrix = glm::mat4(1.0f);
+    glm::vec3 translation = glm::vec3(0.0f);
+    glm::vec3 scaling = glm::vec3(1.0f);
+    glm::vec3 rotation = glm::vec3(0.0f);
 
     uint32_t activeAnimation = 0;
     int rootJointIndex;
@@ -422,7 +466,7 @@ protected:
     void updateUniformBuffers(uint32_t currentImage) {
 
         SkinMvpObject mvpObject{};
-        mvpObject.model =modelMatrix;
+        mvpObject.model = getModelMatrix();
         mvpObject.view = camera->matrices.view;
         mvpObject.projection = camera->matrices.perspective;
 
@@ -433,9 +477,6 @@ protected:
 
         DS.map(currentImage, &mvpObject, Mvp_BINDING);
     }
-
-
-
 
 
 };

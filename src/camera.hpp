@@ -13,6 +13,7 @@ private:
     float znear, zfar;
     float aspect;
 
+
     void updateViewMatrix() {
         glm::mat4 currentMatrix = matrices.view;
 
@@ -42,6 +43,11 @@ private:
         }
     };
 public:
+    void lookAt( glm::vec3 target, glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f)) {
+        matrices.view = glm::lookAt(position, target,  up);
+        matrices.view[1][1] *= -1;
+    }
+
     enum CameraType {
         lookat, firstperson
     };
@@ -150,9 +156,9 @@ public:
         if (fov < 1.0f) {
             fov = 1.0f;
         }
-        if (fov > 160.0f) {
-            fov = 160.0f;
-        }
+//        if (fov > 160.0f) {
+//            fov = 160.0f;
+//        }
         setPerspective(fov, aspect, znear, zfar);
     }
 };

@@ -14,6 +14,10 @@ struct GameObjectVertex {
     glm::vec2 uv;
     glm::vec4 inColor = glm::vec4(1.0f);
 
+    void setColor(glm::vec4 color) {
+        inColor = color;
+    }
+
     static std::vector<VertexBindingDescriptorElement> getBindingDescription() {
         return {
                 {0, sizeof(GameObjectVertex), VK_VERTEX_INPUT_RATE_VERTEX},
@@ -46,6 +50,9 @@ public:
         name = n;
     }
 
+    void setWorldMatrix(glm::mat4 W) {
+        Wm = W;
+    }
     void setCullMode(VkCullModeFlagBits flag) {
         this->cullMode = flag;
     }
@@ -155,8 +162,12 @@ public:
 
     }
 
+
     void render(uint32_t currentImage) {
-        GameObjectUniformBufferObject ubo = GameObjectUniformBufferObject(Wm,
+
+        auto model = getModel();
+
+        GameObjectUniformBufferObject ubo = GameObjectUniformBufferObject(model,
                                                                           camera->matrices.view,
                                                                           camera->matrices.perspective);
 
@@ -166,21 +177,41 @@ public:
 
 
     void move(glm::vec3 pos) {
-        Wm = glm::translate(Wm, pos);
+        translation = pos;
     }
 
     void scale(glm::vec3 scale) {
-        Wm = glm::scale(Wm, scale);
+        scaling = scale;
     }
 
-    void rotate(float degrees, glm::vec3 axis) {
-        Wm = glm::rotate(Wm, glm::radians(degrees), axis);
+    void rotate(glm::vec3 degrees) {
+        rotation = degrees;
+    }
+
+    void updateWorld() {
+        // scale
+        Wm = glm::scale(Wm, scaling);
+        Wm = glm::rotate(Wm, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+        Wm = glm::rotate(Wm, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+        Wm = glm::rotate(Wm, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        // translate
+        Wm = glm::translate(Wm, translation);
+
+        rotation = glm::vec3(0.0);
+        translation = glm::vec3(0.0);
+        scaling = glm::vec3(1.0);
     }
 
 private:
     std::string name;
     Camera *camera{};
     BaseProject *BP{};
+
+
+    glm::vec3 translation = glm::vec3(0.0);
+    glm::vec3 scaling = glm::vec3(1.0);
+    glm::vec3 rotation = glm::vec3(0.0);
 
     Pipeline P;
     VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT;
@@ -220,6 +251,19 @@ private:
 
     const std::string VERT_SHADER = "assets/shaders/bin/game-object.vert.spv";
     const std::string FRAG_SHADER = "assets/shaders/bin/game-object.frag.spv";
+
+
+    glm::mat4 getModel() {
+        // scale
+        glm::mat4 model = glm::scale(Wm, scaling);
+        model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        // translate
+        model = glm::translate(model, translation);
+        return model;
+    }
 
     void createVertexBuffer() {
         VkDeviceSize bufferSize = sizeof(GameObjectVertex) * vertices.size();

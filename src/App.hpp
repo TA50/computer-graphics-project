@@ -5,6 +5,7 @@
 #include "animated-model/skin.hpp"
 #include "animated-model/gltf-loader.hpp"
 #include "helper-structs.hpp"
+#include "game-object.hpp"
 
 class App : public BaseProject {
 protected:
@@ -14,6 +15,8 @@ protected:
     float Ar;
 
     Camera camera;
+
+    GameObject * sphere = new GameObject();
 
     // Here you set the main application parameters
     void setWindowParameters() {
@@ -48,11 +51,11 @@ protected:
         skin = skins[0];
 
         GltfLoader::loadAnimations(skin, model);
+        sphere->setName("sphere");
+        sphere->setModel("assets/models/sphere.obj", ModelType::OBJ);
+        sphere->setBaseTexture("assets/textures/brown_mud.jpg", VK_FORMAT_R8G8B8A8_UNORM, true);
 
-        for (auto &idx: skin->getJointIndices()) {
-            auto joint = skin->getJoint(idx);
-            std::cout << "Joint Name: " << joint->getName() << " Index: " << joint->getIndex() << std::endl;
-        }
+        sphere->init(this, &camera);
 
         camera.type = Camera::CameraType::lookat;
         camera.flipY = true;
@@ -61,10 +64,12 @@ protected:
         camera.setPerspective(60.0f, Ar, 0.1f, 256.0f);
 
 
+        auto modelPoolSizes = sphere->getPoolSizes();
+
         auto skinDPSZs = Skin::getPoolSizes();
-        DPSZs.uniformBlocksInPool = skinDPSZs.uniformBlocksInPool; // 2 more uniform blocks
-        DPSZs.texturesInPool = skinDPSZs.texturesInPool;       // 5 textures
-        DPSZs.setsInPool = skinDPSZs.setsInPool;       // 1 more descriptor sets
+        DPSZs.uniformBlocksInPool = skinDPSZs.uniformBlocksInPool + modelPoolSizes.uniformBlocksInPool; // 2 more uniform blocks
+        DPSZs.texturesInPool = skinDPSZs.texturesInPool + modelPoolSizes.texturesInPool;       // 5 textures
+        DPSZs.setsInPool = skinDPSZs.setsInPool + modelPoolSizes.setsInPool;       // 1 more descriptor sets
 
 //        skin->init(this, &camera, "assets/models/pepsiman/textures/Pepsiman_baseColor.png");
         skin->init(this, &camera, "assets/models/CesiumMan/glTF/CesiumMan_img0.jpg");
@@ -76,7 +81,7 @@ protected:
     void pipelinesAndDescriptorSetsInit() {
 
         skin->createPipelineAndDescriptorSets();
-
+        sphere->pipelinesAndDescriptorSetsInit();
         std::cout << "Pipelines and Descriptor Sets initialization completed!\n";
     }
 
@@ -84,6 +89,7 @@ protected:
 
         skin->pipelinesAndDescriptorSetsCleanup();
 
+        sphere->pipelinesAndDescriptorSetsCleanup();
 
     }
 
@@ -91,6 +97,7 @@ protected:
     void localCleanup() {
 
         skin->localCleanup();
+        sphere->localCleanup();
 
     }
 
@@ -101,6 +108,7 @@ protected:
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
 
         skin->bind(commandBuffer, currentImage);
+        sphere->populateCommandBuffer(commandBuffer, currentImage);
 
     }
 
@@ -121,6 +129,7 @@ protected:
         axisInput.rotation = r;
         axisInput.deltaTime = deltaT;
         skin->render(currentImage, axisInput, frameTime);
+        sphere->render(currentImage);
 
 
     }

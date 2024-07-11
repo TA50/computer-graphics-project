@@ -139,6 +139,18 @@ public:
         updateUniformBuffers(currentImage);
     }
 
+//    void move(glm::vec3 translation) {
+//        rootJoint->translation += translation;
+//    }
+
+//    void rotate(glm::vec3 rotation) {
+//        rootJoint->rotation += rotation;
+//    }
+
+//void scale(glm::vec3 scale) {
+//        rootJoint->scale += scale;
+//    }
+
     void pipelinesAndDescriptorSetsCleanup() {
         DS.cleanup();
         P.cleanup();

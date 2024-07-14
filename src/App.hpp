@@ -27,10 +27,10 @@ protected:
     GameObject *ground = new GameObject("ground");
     GameObject *terrian = new GameObject("terrian");
     GameObject *city = new GameObject("city");
-
+    GameObject * tunnel = new GameObject("tunnel");
 
 //    std::vector<GameObject *> gameObjects = {};
-    std::vector<GameObject *> gameObjects = {city};
+    std::vector<GameObject *> gameObjects = {tunnel};
     std::vector<GameObject *> roads = {};
 
     glm::vec3 CameraInitialPosition = glm::vec3(0, 2.07f, 2);
@@ -55,7 +55,7 @@ protected:
         camera.updatePerspective();
     }
 
-    int ROAD_COUNT = 0;
+    int ROAD_COUNT = 10;
 
     void loadRoad() {
         auto result = GameObjectLoader::loadGltf("assets/models/low_road/scene.gltf");
@@ -109,10 +109,21 @@ protected:
         city->setName("city");
         city->setBaseTexture("assets/textures/textures.png", VK_FORMAT_R8G8B8A8_UNORM, true);
         city->setCullMode(VK_CULL_MODE_NONE);
+
+
+        result = GameObjectLoader::loadGltf("assets/models/tunnel_road/scene.gltf");
+        tunnel->setVertices(result.vertices);
+        tunnel->setIndices(result.indices);
+        tunnel->setLocalMatrix(result.Wm);
+        tunnel->setName("tunnel");
+        tunnel->setBaseTexture("assets/models/tunnel_road/textures/tunnel_road_texture_baseColor.jpeg", VK_FORMAT_R8G8B8A8_UNORM, true);
+        tunnel->setCullMode(VK_CULL_MODE_NONE);
+
+
     }
 
     void setWorld() {
-        std::vector<GameObject *> transformed = {city};
+        std::vector<GameObject *> transformed = {tunnel};
         for (auto go: transformed) {
 
             auto scale = worldLoader.get(go->getId(), SCALE);

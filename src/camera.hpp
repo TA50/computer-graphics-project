@@ -1,164 +1,129 @@
 #pragma once
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include "modules/Starter.hpp"
 
 #include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/transform2.hpp>
+
 
 class Camera {
-private:
-    float fov;
-    float znear, zfar;
-    float aspect;
 
-
-    void updateViewMatrix() {
-        glm::mat4 currentMatrix = matrices.view;
-
-        glm::mat4 rotM = glm::mat4(1.0f);
-        glm::mat4 transM;
-
-        rotM = glm::rotate(rotM, glm::radians(rotation.x * (flipY ? -1.0f : 1.0f)), glm::vec3(1.0f, 0.0f, 0.0f));
-        rotM = glm::rotate(rotM, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-        rotM = glm::rotate(rotM, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-        glm::vec3 translation = position;
-        if (flipY) {
-            translation.y *= -1.0f;
-        }
-        transM = glm::translate(glm::mat4(1.0f), translation);
-
-        if (type == CameraType::firstperson) {
-            matrices.view = rotM * transM;
-        } else {
-            matrices.view = transM * rotM;
-        }
-
-        viewPos = glm::vec4(position, 0.0f) * glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f);
-
-        if (matrices.view != currentMatrix) {
-            updated = true;
-        }
-    };
 public:
-    void lookAt( glm::vec3 target, glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f)) {
-        matrices.view = glm::lookAt(position, target,  up);
-        matrices.view[1][1] *= -1;
-    }
-
-    enum CameraType {
-        lookat, firstperson
-    };
-    CameraType type = CameraType::lookat;
-
-    glm::vec3 rotation = glm::vec3();
-    glm::vec3 position = glm::vec3();
-    glm::vec4 viewPos = glm::vec4();
-
-    float rotationSpeed = 1.0f;
-    float movementSpeed = 1.0f;
-    float zoomSpeed = 1.0f;
-
-    bool updated = true;
-    bool flipY = false;
-
     struct {
         glm::mat4 perspective;
         glm::mat4 view;
+        glm::mat4 world;
     } matrices;
 
-
-    float getNearClip() {
-        return znear;
+    void setPosition(glm::vec3 p) {
+        CamPosition = p;
     }
 
-    float getFarClip() {
-        return zfar;
+    void rotate(float yawDelta, float pitchDelta, float rollDelta) {
+        CamYaw += ROT_SPEED * yawDelta;
+        CamPitch += ROT_SPEED * pitchDelta;
+        CamRoll += ROT_SPEED * rollDelta;
+
+//        Yaw = (Yaw < 0.0f ? 0.0f : (Yaw > 2 * M_PI ? 2 * M_PI : Yaw));
+//        Pitch = (Pitch < 0.0f ? 0.0f : (Pitch > M_PI_2 - 0.01f ? M_PI_2 - 0.01f : Pitch));
+//        Roll = (Roll < -M_PI ? -M_PI : (Roll > M_PI ? M_PI : Roll));
     }
 
-    void setAspectRatio(float aspect) {
-        if (this->aspect == aspect) {
-            return;
-        }
-        this->aspect = aspect;
-        setPerspective(fov, aspect, znear, zfar);
+    void print() {
+
+        std::cout << "================Camera=================" << std::endl;
+        std::cout << "Angles: " << std::endl;
+        std::cout << "Yaw: " << glm::degrees(CamYaw) << std::endl;
+        std::cout << "Pitch: " << glm::degrees(CamPitch) << std::endl;
+        std::cout << "Roll: " << glm::degrees(CamRoll) << std::endl;
+        std::cout << "=================================" << std::endl;
+        std::cout << "Position: " << std::endl;
+        std::cout << "X: " << CamPosition.x << " Y: " << CamPosition.y << " Z: " << CamPosition.z << std::endl;
+        std::cout << "=================================" << std::endl;
+        std::cout << "Target: " << std::endl;
+        std::cout << "X: " << CamTarget.x << " Y: " << CamTarget.y << " Z: " << CamTarget.z << std::endl;
+        std::cout << "=================================" << std::endl;
+
+
     }
 
-    void setPerspective(float fov, float aspect, float znear, float zfar) {
-        glm::mat4 currentMatrix = matrices.perspective;
-        this->fov = fov;
-        this->znear = znear;
-        this->zfar = zfar;
+    void lookAt(glm::vec3 pos, float Yaw = 0) {
+        CamTarget = pos + glm::vec3(
+                glm::rotate(
+                        glm::mat4(1), Yaw, glm::vec3(0, 1, 0))
+                * glm::vec4(CamTargetDelta, 1)
+        );
 
-        matrices.perspective = glm::perspective(glm::radians(fov), aspect, znear, zfar);
-        if (flipY) {
-            matrices.perspective[1][1] *= -1.0f;
-        }
-        if (matrices.view != currentMatrix) {
-            updated = true;
-        }
-    };
+        CamPosition = CamTarget + glm::vec3(
+                glm::rotate(
+                        glm::mat4(1), Yaw + CamYaw, glm::vec3(0, 1, 0)
+                ) * glm::rotate(glm::mat4(1), -CamPitch, glm::vec3(1, 0, 0))
+                * glm::vec4(0, 0, CamDistance, 1));
 
-    void updateAspectRatio(float aspect) {
-        this->aspect = aspect;
-        glm::mat4 currentMatrix = matrices.perspective;
-        matrices.perspective = glm::perspective(glm::radians(fov), aspect, znear, zfar);
-        if (flipY) {
-            matrices.perspective[1][1] *= -1.0f;
-        }
-        if (matrices.view != currentMatrix) {
-            updated = true;
-        }
+
     }
 
-    void setPosition(glm::vec3 position) {
-        this->position = position;
-        updateViewMatrix();
+    void move(float distanceDelta) {
+        CamDistance -= MOVE_SPEED * distanceDelta;
+        CamDistance = (CamDistance < 7.0f ? 7.0f : (CamDistance > 15.0f ? 15.0f : CamDistance));
     }
 
-    void setRotation(glm::vec3 rotation) {
-        this->rotation = rotation;
-        updateViewMatrix();
+    void translate(glm::vec3 posDelta) {
+        CamPosition += MOVE_SPEED * posDelta;
     }
 
-    void rotate(glm::vec3 delta) {
+    void updateWorld(float yaw = 0.0f) {
 
-        this->rotation += delta;
-        updateViewMatrix();
+        glm::vec3 dp = glm::vec3(glm::rotate(glm::mat4(1), yaw, glm::vec3(0, 1, 0))
+                                 * glm::vec4(0, 0, 0, 1)
+        );
+
+        glm::mat4 M = glm::translate(glm::mat4(1.0f), CamPosition + dp)
+                      * glm::rotate(glm::mat4(1.0f), yaw, glm::vec3(0, 1, 0))
+                      * glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(1, 0, 0))
+                      * glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1));
+        matrices.world = M;
+
     }
 
-    void setTranslation(glm::vec3 translation) {
-        this->position = translation;
-        updateViewMatrix();
-    };
+    void updatePerspective() {
 
-    void translate(glm::vec3 delta) {
-        this->position += delta;
-        updateViewMatrix();
+        matrices.perspective = glm::perspective(fov, aspect, znear, zfar);
+        matrices.perspective[1][1] *= -1;
     }
 
-    void setRotationSpeed(float rotationSpeed) {
-        this->rotationSpeed = rotationSpeed;
+    void updateViewMatrix() {
+        matrices.view = glm::lookAt(CamPosition, CamTarget, up);
+//        matrices.view[1][1] *= -1;
     }
 
-    void setMovementSpeed(float movementSpeed) {
-        this->movementSpeed = movementSpeed;
+    void setEuler(float yaw, float pitch, float roll) {
+        CamYaw = yaw;
+        CamPitch = pitch;
+        CamRoll = roll;
     }
 
-    void setZoomSpeed(float zoomSpeed) {
-        this->zoomSpeed = zoomSpeed;
-    }
+    float fov = glm::radians(45.0f);
+    float aspect = 4.0f / 3.0f;
+    float znear = 0.1f;
+    float zfar = 500.0f;
 
-    void zoom(float delta) {
-        fov += delta;
-        if (fov < 1.0f) {
-            fov = 1.0f;
-        }
-//        if (fov > 160.0f) {
-//            fov = 160.0f;
-//        }
-        setPerspective(fov, aspect, znear, zfar);
-    }
+
+
+    float CamYaw = M_PI;
+    float CamPitch = glm::radians(20.0f);
+    float CamRoll = 0.0f;
+    float CamDistance = 10;
+    glm::vec3 CamTargetDelta = glm::vec3(2, 2, 2);
+    glm::vec3 CamTarget = glm::vec3(0);
+    glm::vec3 CamPosition = glm::vec3(0);
+    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+private:
+    float ROT_SPEED = glm::radians(120.0f);
+    float MOVE_SPEED = 10.0f;
+
+
+
 };

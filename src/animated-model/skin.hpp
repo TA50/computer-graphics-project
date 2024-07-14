@@ -143,6 +143,7 @@ public:
         this->translation += translation;
     }
 
+
     void setWorldMatrix(glm::mat4 mat) {
         worldMatrix = mat;
     }
@@ -241,6 +242,10 @@ public:
 
     glm::mat4 getJointMatrix(int index) {
         return jointMatrices[index];
+    }
+
+    glm::mat4 getWoldMatrix() {
+        return worldMatrix;
     }
 
     int getRootJointIndex() const {
@@ -466,7 +471,7 @@ protected:
     void updateUniformBuffers(uint32_t currentImage) {
 
         SkinMvpObject mvpObject{};
-        mvpObject.model = getModelMatrix();
+        mvpObject.model = getModelMatrix() * camera->matrices.world;
         mvpObject.view = camera->matrices.view;
         mvpObject.projection = camera->matrices.perspective;
 

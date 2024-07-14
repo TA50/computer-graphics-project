@@ -46,6 +46,10 @@ struct GameObjectUniformBufferObject : BaseUniformBufferObject {
 
 class GameObject {
 public:
+    GameObject(std::string _id) : id(_id) {
+
+    }
+
     void setName(std::string n) {
         name = n;
     }
@@ -53,6 +57,7 @@ public:
     void setWorldMatrix(glm::mat4 W) {
         Wm = W;
     }
+
     void setCullMode(VkCullModeFlagBits flag) {
         this->cullMode = flag;
     }
@@ -76,6 +81,10 @@ public:
         baseTextureFormat = Fmt;
         baseTextureInitSampler = initSampler;
 
+    }
+
+    std::string getId() {
+        return id;
     }
 
     PoolSizes getPoolSizes() {
@@ -187,26 +196,55 @@ public:
     void rotate(glm::vec3 degrees) {
         rotation = degrees;
     }
+    void setLocalMatrix(glm::mat4 m) {
+        LocalMatrix = m;
+    }
 
     void updateWorld() {
         // scale
-        Wm = glm::scale(Wm, scaling);
+        std::cout << name << std::endl;
+        std::cout << "Pre" << std::endl;
+        Printer::printArrArr(Wm);
+        Wm = glm::scale(LocalMatrix, scaling);
+        std::cout << "scale x " << scaling.x << " y " << scaling.y << " z " << scaling.z << std::endl;
         Wm = glm::rotate(Wm, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
         Wm = glm::rotate(Wm, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
         Wm = glm::rotate(Wm, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
         // translate
         Wm = glm::translate(Wm, translation);
+        std::cout << "After" << std::endl;
+        Printer::printArrArr(Wm);
 
         rotation = glm::vec3(0.0);
         translation = glm::vec3(0.0);
         scaling = glm::vec3(1.0);
     }
 
+
+    glm::mat4 getModel() {
+        // scale
+        glm::mat4 model = glm::scale(Wm, scaling);
+        model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        // translate
+        model = glm::translate(model, translation);
+
+        return model;
+    }
+
+    std::string getName(){
+        return name;
+
+    }
 private:
     std::string name;
+    std::string id;
     Camera *camera{};
     BaseProject *BP{};
+    glm::mat4 LocalMatrix = glm::mat4(1.0f);
 
 
     glm::vec3 translation = glm::vec3(0.0);
@@ -251,19 +289,6 @@ private:
 
     const std::string VERT_SHADER = "assets/shaders/bin/game-object.vert.spv";
     const std::string FRAG_SHADER = "assets/shaders/bin/game-object.frag.spv";
-
-
-    glm::mat4 getModel() {
-        // scale
-        glm::mat4 model = glm::scale(Wm, scaling);
-        model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-        // translate
-        model = glm::translate(model, translation);
-        return model;
-    }
 
     void createVertexBuffer() {
         VkDeviceSize bufferSize = sizeof(GameObjectVertex) * vertices.size();

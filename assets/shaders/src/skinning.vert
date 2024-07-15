@@ -11,12 +11,12 @@ layout(set = 0, binding = 0) uniform UBO {
     mat4 model;
     mat4 view;
     mat4 proj;
-    mat4 jointTransformMatrices[100];
+    mat4 jointTransformMatrices[200];
     vec4 lightPos;
 } ubo;
 
 layout(set = 0, binding = 1) uniform JointUBO {
-    mat4 inverseBindMatrices[100];
+    mat4 inverseBindMatrices[200];
 } inverseBindMatricesUbo;
 
 layout (location = 0) out vec3 outNormal;

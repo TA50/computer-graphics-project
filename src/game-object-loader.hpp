@@ -25,6 +25,7 @@ public:
         result.Wm = glm::mat4(1.0f);
         if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
                               file.c_str())) {
+            std::cout << "Error loading GLTF file: " << file << "\n";
             throw std::runtime_error(warn + err);
         }
 
@@ -77,6 +78,7 @@ public:
 
         if (!loader.LoadASCIIFromFile(&model, &warn, &err,
                                       file.c_str())) {
+            std::cout << "Error loading GLTF file: " << file << "\n";
             throw std::runtime_error(warn + err);
         }
 

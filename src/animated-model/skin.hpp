@@ -10,7 +10,7 @@
 #include "helper-structs.hpp"
 #include "animated-model/animation.hpp"
 
-#define MAX_JOINTS_COUNT 100
+#define MAX_JOINTS_COUNT 200
 
 struct SkinVertex {
 public:
@@ -63,9 +63,10 @@ class Skin {
 public:
     std::vector<Animation> animations;
 
-    explicit Skin(std::string name, int jointsCount) : name(std::move(name)), jointsCount(jointsCount) {
+    explicit Skin(std::string name, int jointsCount, bool pCameraFollow = true) : name(std::move(name)),
+                                                                                  jointsCount(jointsCount) {
         rootJointIndex = -1;
-
+        cameraFollow = pCameraFollow;
         joints = std::unordered_map<int, Joint *>();
         inverseBindMatrices = std::unordered_map<int, glm::mat4>();
         jointMatrices = std::unordered_map<int, glm::mat4>();
@@ -100,7 +101,7 @@ public:
 
         P.init(bp, &VD, VERT_SHADER, FRAG_SHADER, {&DSL});
         P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
-                              VK_CULL_MODE_BACK_BIT, false);
+                              VK_CULL_MODE_NONE, false);
         createVertexBuffer();
         createIndexBuffer();
 
@@ -205,6 +206,10 @@ public:
 
     // Setters
 
+    void setCameraFollow(bool cameraFollow) {
+        this->cameraFollow = cameraFollow;
+    }
+
     void setTranslation(glm::vec3 translation) {
         this->translation = translation;
     }
@@ -232,8 +237,8 @@ public:
     }
 
     glm::vec3 getPosition() {
-    auto Wm = getModelMatrix();
-    return Wm[3];
+        auto Wm = getModelMatrix();
+        return Wm[3];
     }
 
     glm::mat4 getInverseBindMatrix(int index) {
@@ -288,7 +293,7 @@ public:
         return rootJoint->getGlobalMatrix() * M;
     }
 
-    glm::mat4 getTransformedWorldMatrix(){
+    glm::mat4 getTransformedWorldMatrix() {
         glm::mat4 M = worldMatrix;
         M = glm::scale(M, scaling);
         M = glm::rotate(M, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -385,6 +390,7 @@ protected:
     glm::vec3 scaling = glm::vec3(1.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
 
+    bool cameraFollow = true;
     uint32_t activeAnimation = 0;
     int rootJointIndex;
     Joint *rootJoint;
@@ -471,7 +477,11 @@ protected:
     void updateUniformBuffers(uint32_t currentImage) {
 
         SkinMvpObject mvpObject{};
-        mvpObject.model = getModelMatrix() * camera->matrices.world;
+        if (cameraFollow) {
+            mvpObject.model = getModelMatrix() * camera->matrices.world;
+        } else {
+            mvpObject.model = getModelMatrix();
+        }
         mvpObject.view = camera->matrices.view;
         mvpObject.projection = camera->matrices.perspective;
 

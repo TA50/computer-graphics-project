@@ -1,12 +1,14 @@
 {
-  "hero":{
-    "speed": 0.01,
-    "radius": 6.312
+  "game": {
+    "heroSpeed": 50,
+    "villainSpeed": 0.5,
+    "villainAnimationSpeed": 3,
+    "heroAnimationSpeed": 2
   },
   "camera": {
     "euler": {
       "yaw": 180,
-      "pitch": 20,
+      "pitch": 33,
       "roll": 0
     },
     "position": {
@@ -20,38 +22,21 @@
       "z": 0
     },
     "perspective": {
-      "fov": 40,
+      "fov": 50,
       "near": 0.1,
       "far": 500
     },
     "distance": 10
   },
-  "ground": {
-    "scale": {
-      "x": 300,
-      "y": 300,
-      "z": 300
-    },
-    "translate": {
-      "x": 0,
-      "y": 0,
-      "z": 0
-    },
-    "rotate": {
-      "x": 66,
-      "y": 0,
-      "z": 0
-    }
-  },
   "sphere": {
     "scale": {
-      "x": 0,
-      "y": 0,
-      "z": 0
+      "x": 0.2,
+      "y": 0.2,
+      "z": 0.2
     },
     "translate": {
-      "x": 5,
-      "y": -5,
+      "x": 0,
+      "y": 0,
       "z": 0
     },
     "rotate": {
@@ -60,33 +45,33 @@
       "z": 0
     }
   },
-  "road_base": {
+  "road": {
     "scale": {
-      "x": 90,
-      "y": 90,
-      "z": 90
+      "x": 7,
+      "y": 1,
+      "z": 11
     },
     "translate": {
-      "x": 30,
-      "y": 0,
-      "z": 1000
+      "x": 0,
+      "y": -10,
+      "z": -0.03
     },
     "rotate": {
-      "x": 0,
-      "y": 0,
+      "x": -90,
+      "y": 180,
       "z": 0
     }
   },
-  "city": {
+  "luna": {
     "scale": {
       "x": 1,
       "y": 1,
       "z": 1
     },
     "translate": {
-      "x": -2000,
-      "y": 3000,
-      "z": 0
+      "x": 0,
+      "y": 5,
+      "z": 2
     },
     "rotate": {
       "x": 0,
@@ -94,21 +79,21 @@
       "z": 0
     }
   },
-  "tunnel": {
+  "cola-can": {
     "scale": {
-      "x": 60,
-      "y": 60,
-      "z": 60
+      "x": 0,
+      "y": 0,
+      "z": 0
     },
     "translate": {
-      "x": 6.312,
-      "y": 0.0625,
+      "x": 0.1,
+      "y": 0,
       "z": 0
     },
     "rotate": {
       "x": 0,
-      "y": 0,
-      "z": 0
+      "y": 90,
+      "z": 90
     }
   }
 }

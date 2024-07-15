@@ -11,10 +11,11 @@ public:
         std::string error, warning;
         bool fileLoaded = gltfContext.LoadASCIIFromFile(&glTFInput, &error, &warning, filename);
         if (fileLoaded) {
-            std::cout << "File loaded successfully" << std::endl;
+
+            std::cout << filename << " : " << "File loaded successfully" << std::endl;
             return glTFInput;
         } else {
-            std::cerr << "Failed to load glTF file: " << filename << std::endl;
+            std::cerr << filename << " : " << "Failed to load glTF file: " << filename << std::endl;
             std::cerr << error << std::endl;
             throw std::runtime_error("Failed to load glTF file");
         }
@@ -178,7 +179,7 @@ public:
     }
 
 
-    static void loadAnimations(Skin *skin, tinygltf::Model &input) {
+    static void loadAnimations(Skin *skin, tinygltf::Model &input, int i = 0) {
         skin->animations.resize(input.animations.size());
 
         for (size_t i = 0; i < input.animations.size(); i++) {

@@ -13,10 +13,12 @@
 class App : public BaseProject {
 protected:
     Skin *skin;
+    Skin *villan;
     glm::vec3 CamPos = glm::vec3(0.0, 0.1, 5.0);
     glm::mat4 ViewMatrix;
     float Ar;
 
+    GameConfig gameConfig;
 
 
     WorldLoader worldLoader = WorldLoader("assets/world.json");
@@ -24,13 +26,11 @@ protected:
     Camera camera;
 
     GameObject *sphere = new GameObject("sphere");
-    GameObject *ground = new GameObject("ground");
-    GameObject *terrian = new GameObject("terrian");
-    GameObject *city = new GameObject("city");
-    GameObject * tunnel = new GameObject("tunnel");
+    GameObject *road = new GameObject("road");
+    GameObject *colaCan = new GameObject("cola-can");
 
-//    std::vector<GameObject *> gameObjects = {};
-    std::vector<GameObject *> gameObjects = {tunnel};
+
+    std::vector<GameObject *> gameObjects = {road, colaCan};
     std::vector<GameObject *> roads = {};
 
     glm::vec3 CameraInitialPosition = glm::vec3(0, 2.07f, 2);
@@ -50,29 +50,9 @@ protected:
     // What to do when the window changes size
     void onWindowResize(int w, int h) override {
         std::cout << "Window resized to: " << w << " x " << h << "\n";
-        Ar = (float) w / (float)h;
+        Ar = (float) w / (float) h;
         camera.aspect = Ar;
         camera.updatePerspective();
-    }
-
-    int ROAD_COUNT = 10;
-
-    void loadRoad() {
-        auto result = GameObjectLoader::loadGltf("assets/models/low_road/scene.gltf");
-
-        for (int i = 0; i < ROAD_COUNT; i++) {
-            auto road = new GameObject("road_" + i);
-            road->setName("Road " + i);
-            road->setBaseTexture("assets/models/low_road/textures/Material.004_baseColor.jpeg",
-                                 VK_FORMAT_R8G8B8A8_UNORM,
-                                 true);
-            road->setCullMode(VK_CULL_MODE_NONE);
-            road->setVertices(result.vertices);
-            road->setIndices(result.indices);
-            roads.push_back(road);
-            gameObjects.push_back(road);
-
-        }
     }
 
     void loadModels() {
@@ -83,107 +63,89 @@ protected:
         }
 
         skin = skins[0];
-
         GltfLoader::loadAnimations(skin, model);
 
-//        skin->setRotation(glm::vec3(0, 90, 90));
-        sphere->setName("sphere");
-        sphere->setModel("assets/models/sphere.obj", ModelType::OBJ);
-        sphere->setBaseTexture("assets/textures/2k_sun.jpg", VK_FORMAT_R8G8B8A8_UNORM, true);
-        loadRoad();
+        // load golem
+        model = GltfLoader::loadGlTFFile("assets/models/lynx_-_stars_-_animated/scene.gltf");
 
-        ground->setModel("assets/models/SPW_Terrain_Grass_Flat.mgcg", MGCG);
-        ground->setName("ground");
-        ground->setBaseTexture("assets/textures/SPW_Natures_02.png", VK_FORMAT_R8G8B8A8_UNORM, true);
-        ground->setCullMode(VK_CULL_MODE_NONE);
+        std::vector<Skin *> gskins{};
+        for (const auto &skin: model.skins) {
+            gskins.push_back(new Skin(GltfLoader::loadSkin(model, skin)));
+        }
 
+        villan = gskins[0];
+        GltfLoader::loadAnimations(villan, model, 2);
 
-        terrian->setModel("assets/models/terrian/scene.gltf", GLTF);
-        terrian->setName("terrian");
-        terrian->setBaseTexture("assets/textures/terrian/GREEN_baseColor.png", VK_FORMAT_R8G8B8A8_UNORM, true);
-        terrian->setCullMode(VK_CULL_MODE_NONE);
-        auto result = GameObjectLoader::loadGltf("assets/models/City_6_Industrial.gltf");
-        city->setVertices(result.vertices);
-        city->setIndices(result.indices);
-        city->setLocalMatrix(result.Wm);
-        city->setName("city");
-        city->setBaseTexture("assets/textures/textures.png", VK_FORMAT_R8G8B8A8_UNORM, true);
-        city->setCullMode(VK_CULL_MODE_NONE);
+//        golem->setActiveAnimation(2);
+        auto result = GameObjectLoader::loadGltf("assets/models/low_road/long road.gltf");
+        road->setName("Road");
+        road->setBaseTexture("assets/models/low_road/textures/Material.002_baseColor.jpeg",
+                             VK_FORMAT_R8G8B8A8_UNORM,
+                             true);
+        road->setCullMode(VK_CULL_MODE_NONE);
+        road->setVertices(result.vertices);
+        road->setIndices(result.indices);
 
-
-        result = GameObjectLoader::loadGltf("assets/models/tunnel_new/untitled.gltf");
-        tunnel->setVertices(result.vertices);
-        tunnel->setIndices(result.indices);
-        tunnel->setLocalMatrix(result.Wm);
-        tunnel->setName("tunnel");
-        tunnel->setBaseTexture("assets/models/tunnel_road/textures/tunnel_road_texture_baseColor.jpeg", VK_FORMAT_R8G8B8A8_UNORM, true);
-        tunnel->setCullMode(VK_CULL_MODE_NONE);
+        result = GameObjectLoader::loadGltf("assets/models/cola-can/cola.gltf");
+        colaCan->setName("Cola Can");
+        colaCan->setBaseTexture("assets/models/cola-can/textures/Material_001_baseColor.png",
+                                VK_FORMAT_R8G8B8A8_UNORM,
+                                true);
+        colaCan->setCullMode(VK_CULL_MODE_NONE);
+        colaCan->setVertices(result.vertices);
+        colaCan->setIndices(result.indices);
 
 
     }
 
     void setWorld() {
-        std::vector<GameObject *> transformed = {tunnel};
+        std::vector<GameObject *> transformed = {road, colaCan};
         for (auto go: transformed) {
 
             auto scale = worldLoader.get(go->getId(), SCALE);
             auto rotation = worldLoader.get(go->getId(), ROTATE);
             auto translation = worldLoader.get(go->getId(), TRANSLATE);
-            go->move(translation);
-            go->rotate(rotation);
+            go->setTranslation(translation);
+            go->setRotation(rotation);
             go->scale(scale);
-            go->setWorldMatrix(glm::mat4(1));
-            go->updateWorld();
+//            go->setWorldMatrix(glm::mat4(1));
+//            go->updateWorld();
 
-            auto model = go->getModel();
-            std::cout << go->getName();
-            Printer::printArrArr(model);
+//            auto model = go->getModel();
+//            std::cout << go->getName();
+//            Printer::printArrArr(model);
+
+            go->changeModelCenter(glm::vec3(0, 0, 0));
         }
 
-        float between = 2.0f;
-        for (int i = 0; i < ROAD_COUNT; i++) {
 
-            auto road = roads[i];
-            auto scale = worldLoader.get("road_base", SCALE);
-            auto rotation = worldLoader.get("road_base", ROTATE);
-            auto translation = worldLoader.get("road_base", TRANSLATE);
-            translation.y -= (float) i * between;
-            scale.x += (scale.x / (float) ROAD_COUNT) * (float) (i + 1);
-            road->move(translation);
-            road->rotate(rotation);
-            road->scale(scale);
-            road->setWorldMatrix(glm::mat4(1));
-            road->updateWorld();
-        }
+        villan->setTranslation(worldLoader.get("luna", TRANSLATE));
+        villan->setRotation(worldLoader.get("luna", ROTATE));
+        villan->setScaling(worldLoader.get("luna", SCALE));
+        villan->updateWorldMatrix();
+        villan->setCameraFollow(false);
+
 
     }
 
+    void setGameConfig() {
+
+        worldLoader.setGame(&gameConfig);
+    }
 
     void setCamera() {
-//        camera.setEuler(M_PI, glm::radians(20.0f), glm::radians(90.0f));
-//        camera.TargetDelta = glm::vec3(2, 2, 2);
-//        camera.setPosition(CameraInitialPosition);
-//        camera.fov = glm::radians(45.0f);
-//        camera.aspect = Ar;
-//        camera.znear = 0.1f;
-//        camera.zfar = 500.0f;
-//
         worldLoader.setCamera(&camera, Ar);
         camera.updatePerspective();
-
     }
 
-    void setHero() {
-        worldLoader.setHero(HeroMovingSpeed, Radius);
-    }
 
     void localInit() {
 
         worldLoader.readMatrixJson();
         loadModels();
         setCamera();
-        setHero();
         setWorld();
+        setGameConfig();
 
 
         for (auto go: gameObjects) {
@@ -197,10 +159,13 @@ protected:
         std::cout << "Game Objects initialized" << std::endl;
         auto skinDPSZs = Skin::getPoolSizes();
         skin->init(this, &camera, "assets/models/pepsiman/textures/Pepsiman_baseColor.png");
+        villan->init(this, &camera, "assets/models/lynx_-_stars_-_animated/textures/stars_baseColor.png");
+
         std::cout << "Skin initialized" << std::endl;
-        DPSZs.uniformBlocksInPool += skinDPSZs.uniformBlocksInPool;
-        DPSZs.texturesInPool += skinDPSZs.texturesInPool;
-        DPSZs.setsInPool += skinDPSZs.setsInPool;
+        DPSZs.uniformBlocksInPool += skinDPSZs.uniformBlocksInPool * 2 + skinDPSZs.uniformBlocksInPool * 2;
+        DPSZs.texturesInPool += skinDPSZs.texturesInPool * 2;
+        DPSZs.setsInPool += skinDPSZs.setsInPool * 2;
+
 
         std::cout << "Uniform Blocks: " << DPSZs.uniformBlocksInPool << std::endl;
         std::cout << "Textures: " << DPSZs.texturesInPool << std::endl;
@@ -210,11 +175,6 @@ protected:
 
 
     bool pause = true;
-    float HeroMovingSpeed = 2.0f;
-    float tx = 0.0f;
-    float ty = 0.0f;
-    float Radius = 0.0f;
-    float Theta = 0.0f;
 
     void updateUniformBuffer(uint32_t currentImage) override {
         float deltaT;
@@ -232,10 +192,7 @@ protected:
         if (glfwGetKey(window, GLFW_KEY_0)) {
             // RESET
             skin->setTranslation(glm::vec3(0));
-            Theta = 0.0f;
-            tx = 0.0f;
-            ty = 0.0f;
-//            setCamera();
+            villan->setTranslation(glm::vec3(0));
         }
         if (glfwGetKey(window, GLFW_KEY_P)) {
             pause = false;
@@ -247,22 +204,20 @@ protected:
             worldLoader.readMatrixJson();
             setWorld();
             setCamera();
-            setHero();
+            setGameConfig();
             std::cout << "Reset World" << std::endl;
         }
 
+        auto Rz = glm::rotate(glm::mat4(1), glm::radians(10.0f), glm::vec3(1, 0, 0));
+        auto T = glm::translate(glm::mat4(1), glm::vec3(0.1, gameConfig.villainSpeed, 0));
 
 
         if (!pause) {
-            // Theta = (Theta > 360 ? Theta = 0 : Theta);
-            tx = Radius * sin(glm::radians(-Theta));
-            ty = Radius * cos(glm::radians(-Theta));
-            Theta += HeroMovingSpeed;
-            if(Theta > 360) {
-                Theta = 0;
-            }
-            skin->move(glm::vec3(-tx, -ty, 0));
-            skin->updateAnimation(frameTime);
+            skin->move(glm::vec3(0, -gameConfig.heroSpeed, 0));
+            skin->updateAnimation(frameTime * gameConfig.heroAnimationSpeed);
+            villan->move(glm::vec3(0, -gameConfig.villainSpeed, 0));
+            villan->updateAnimation(frameTime*gameConfig.villainAnimationSpeed);
+
         }
 
         camera.rotate(-r.y * deltaT, -r.x * deltaT, -r.z * deltaT);
@@ -271,11 +226,7 @@ protected:
             camera.print();
             auto pos = skin->getPosition();
             std::cout << "Skin Position: " << pos.x << ", " << pos.y << ", " << pos.z << std::endl;
-            std::cout << "Hero Speed: " << HeroMovingSpeed << std::endl;
-            std::cout << "Hero Radius: " << Radius << std::endl;
-            std::cout << "Hero tx: " << -tx << std::endl;
-            std::cout << "Hero ty: " << -ty << std::endl;
-            std::cout << "Hero Theta: " << Theta << std::endl;
+            gameConfig.print();
         }
 
         camera.lookAt(skin->getPosition());
@@ -283,7 +234,7 @@ protected:
         camera.updateViewMatrix();
 //        camera.updatePerspective();
         skin->render(currentImage, axisInput);
-
+        villan->render(currentImage, axisInput);
 
         for (auto go: gameObjects) {
             go->render(currentImage);
@@ -295,6 +246,7 @@ protected:
     void pipelinesAndDescriptorSetsInit() override {
 
         skin->createPipelineAndDescriptorSets();
+        villan->createPipelineAndDescriptorSets();
         for (auto go: gameObjects) {
             go->pipelinesAndDescriptorSetsInit();
         }
@@ -304,6 +256,7 @@ protected:
     void pipelinesAndDescriptorSetsCleanup() override {
 
         skin->pipelinesAndDescriptorSetsCleanup();
+        villan->pipelinesAndDescriptorSetsCleanup();
         for (auto go: gameObjects) {
             go->pipelinesAndDescriptorSetsCleanup();
         }
@@ -312,6 +265,7 @@ protected:
 
     void localCleanup() override {
         skin->localCleanup();
+        villan->localCleanup();
         for (auto go: gameObjects) {
             go->localCleanup();
         }
@@ -321,6 +275,7 @@ protected:
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) override {
 
         skin->bind(commandBuffer, currentImage);
+        villan->bind(commandBuffer, currentImage);
         for (auto go: gameObjects) {
             go->populateCommandBuffer(commandBuffer, currentImage);
         }

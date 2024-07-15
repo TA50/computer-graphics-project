@@ -1,0 +1,8 @@
+Model Information:
+* title:	LYNX - stars - animated
+* source:	https://sketchfab.com/3d-models/lynx-stars-animated-3e41f5f8963e49c7903dcd25a50805fd
+* author:	nolanfa (https://sketchfab.com/nolanfa)
+
+Model License:
+* license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
+* requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works

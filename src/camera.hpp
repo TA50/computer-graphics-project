@@ -26,8 +26,11 @@ public:
         CamPitch += ROT_SPEED * pitchDelta;
         CamRoll += ROT_SPEED * rollDelta;
 
+
 //        Yaw = (Yaw < 0.0f ? 0.0f : (Yaw > 2 * M_PI ? 2 * M_PI : Yaw));
-//        Pitch = (Pitch < 0.0f ? 0.0f : (Pitch > M_PI_2 - 0.01f ? M_PI_2 - 0.01f : Pitch));
+        CamPitch = (CamPitch < 0.0f ? 0.0f : CamPitch);
+        // 180
+        CamPitch = (CamPitch > M_PI ? M_PI : CamPitch);
 //        Roll = (Roll < -M_PI ? -M_PI : (Roll > M_PI ? M_PI : Roll));
     }
 
@@ -112,7 +115,6 @@ public:
     float zfar = 500.0f;
 
 
-
     float CamYaw = M_PI;
     float CamPitch = glm::radians(20.0f);
     float CamRoll = 0.0f;
@@ -124,7 +126,6 @@ public:
 private:
     float ROT_SPEED = glm::radians(120.0f);
     float MOVE_SPEED = 10.0f;
-
 
 
 };

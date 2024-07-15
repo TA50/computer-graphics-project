@@ -185,19 +185,32 @@ public:
     }
 
 
-    void move(glm::vec3 pos) {
+    void setTranslation(glm::vec3 pos) {
         translation = pos;
+    }
+
+    void move(glm::vec3 pos) {
+        translation += pos;
     }
 
     void scale(glm::vec3 scale) {
         scaling = scale;
     }
 
-    void rotate(glm::vec3 degrees) {
+    void setRotation(glm::vec3 degrees) {
         rotation = degrees;
     }
+
+    void rotate(glm::vec3 degrees) {
+        rotation += degrees;
+    }
+
     void setLocalMatrix(glm::mat4 m) {
         LocalMatrix = m;
+    }
+
+    glm::mat4 getLocalMatrix() {
+        return LocalMatrix;
     }
 
     void updateWorld() {
@@ -224,7 +237,11 @@ public:
 
     glm::mat4 getModel() {
         // scale
-        glm::mat4 model = glm::scale(Wm, scaling);
+        auto M = LocalMatrix;
+//        glm::mat4 model = glm::translate(M, -translation);
+
+        auto model = glm::scale(M, scaling);
+
         model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -232,20 +249,57 @@ public:
         // translate
         model = glm::translate(model, translation);
 
-        return model;
+        return model * OriginMatrix;
     }
 
-    std::string getName(){
+    std::string getName() {
         return name;
 
     }
+
+
+    std::vector<glm::vec3> getVertexLocations() {
+        std::vector<glm::vec3> vertexLocations{vertices.size()};
+        for (const auto &vertex: vertices) {
+            vertexLocations.push_back(vertex.pos);
+        }
+        return vertexLocations;
+    }
+
+    glm::vec3 calculateGeometricCenter() {
+        std::vector<glm::vec3> vertexLocations = getVertexLocations();
+        glm::vec3 center(0.0f);
+        for (const auto &vertex: vertexLocations) {
+            center += vertex;
+        }
+        center /= static_cast<float>(vertexLocations.size());
+        return center;
+    }
+
+    void changeCenterToGeometricCenter() {
+        glm::vec3 geometricCenter = calculateGeometricCenter();
+        changeModelCenter(geometricCenter);
+    }
+
+    void changeModelCenter(const glm::vec3 &newCenter) {
+        glm::vec3 currentCenter = calculateGeometricCenter();
+        glm::vec3 translationToOrigin = -currentCenter;
+        glm::vec3 translationToNewCenter = newCenter;
+
+        glm::mat4 translateToOriginMatrix = glm::translate(glm::mat4(1.0f), translationToOrigin);
+        glm::mat4 translateToNewCenterMatrix = glm::translate(glm::mat4(1.0f), translationToNewCenter);
+
+        // Combined transformation matrix: move to origin, then move to new center
+        OriginMatrix = translateToNewCenterMatrix;
+    }
+
 private:
     std::string name;
     std::string id;
     Camera *camera{};
     BaseProject *BP{};
     glm::mat4 LocalMatrix = glm::mat4(1.0f);
-
+    glm::mat4 OriginMatrix = glm::mat4(1.0f);
 
     glm::vec3 translation = glm::vec3(0.0);
     glm::vec3 scaling = glm::vec3(1.0);

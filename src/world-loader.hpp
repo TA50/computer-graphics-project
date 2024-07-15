@@ -110,9 +110,15 @@ public:
 
     }
 
-    void setHero(float& heroSpeed, float& radius) {
-        heroSpeed = matrixJson["hero"]["speed"];
-        radius = matrixJson["hero"]["radius"];
+
+
+    void setGame(GameConfig *config) {
+        auto key = "game";
+        config->heroSpeed = matrixJson[key]["heroSpeed"];
+        config->villainSpeed = matrixJson[key]["villainSpeed"];
+        config->heroAnimationSpeed = matrixJson[key]["heroAnimationSpeed"];
+        config->villainAnimationSpeed = matrixJson[key]["villainAnimationSpeed"];
+
     }
 
 private :

@@ -80,7 +80,8 @@ public:
                                  * glm::vec4(0, 0, 0, 1)
         );
 
-        glm::mat4 M = glm::translate(glm::mat4(1.0f), CamPosition + dp)
+        auto res = CamPosition + dp;
+        glm::mat4 M = glm::translate(glm::mat4(1.0f), glm::vec3(res.x, res.y, 0))
                       * glm::rotate(glm::mat4(1.0f), yaw, glm::vec3(0, 1, 0))
                       * glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(1, 0, 0))
                       * glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1));
@@ -105,7 +106,7 @@ public:
         CamRoll = roll;
     }
 
-    float fov = glm::radians(45.0f);
+    float fov = glm::radians(20.0f);
     float aspect = 4.0f / 3.0f;
     float znear = 0.1f;
     float zfar = 500.0f;
@@ -115,7 +116,7 @@ public:
     float CamYaw = M_PI;
     float CamPitch = glm::radians(20.0f);
     float CamRoll = 0.0f;
-    float CamDistance = 10;
+    float CamDistance = 4;
     glm::vec3 CamTargetDelta = glm::vec3(2, 2, 2);
     glm::vec3 CamTarget = glm::vec3(0);
     glm::vec3 CamPosition = glm::vec3(0);

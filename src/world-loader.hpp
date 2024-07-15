@@ -110,6 +110,11 @@ public:
 
     }
 
+    void setHero(float& heroSpeed, float& radius) {
+        heroSpeed = matrixJson["hero"]["speed"];
+        radius = matrixJson["hero"]["radius"];
+    }
+
 private :
     nlohmann::json matrixJson;
     std::string filename;

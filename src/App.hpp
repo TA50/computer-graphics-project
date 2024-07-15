@@ -111,7 +111,7 @@ protected:
         city->setCullMode(VK_CULL_MODE_NONE);
 
 
-        result = GameObjectLoader::loadGltf("assets/models/tunnel_road/scene.gltf");
+        result = GameObjectLoader::loadGltf("assets/models/tunnel_new/untitled.gltf");
         tunnel->setVertices(result.vertices);
         tunnel->setIndices(result.indices);
         tunnel->setLocalMatrix(result.Wm);
@@ -173,12 +173,16 @@ protected:
 
     }
 
+    void setHero() {
+        worldLoader.setHero(HeroMovingSpeed, Radius);
+    }
+
     void localInit() {
 
         worldLoader.readMatrixJson();
         loadModels();
         setCamera();
-
+        setHero();
         setWorld();
 
 
@@ -206,7 +210,11 @@ protected:
 
 
     bool pause = true;
-    float HeroMovingSpeed = 30.0f;
+    float HeroMovingSpeed = 2.0f;
+    float tx = 0.0f;
+    float ty = 0.0f;
+    float Radius = 0.0f;
+    float Theta = 0.0f;
 
     void updateUniformBuffer(uint32_t currentImage) override {
         float deltaT;
@@ -224,6 +232,9 @@ protected:
         if (glfwGetKey(window, GLFW_KEY_0)) {
             // RESET
             skin->setTranslation(glm::vec3(0));
+            Theta = 0.0f;
+            tx = 0.0f;
+            ty = 0.0f;
 //            setCamera();
         }
         if (glfwGetKey(window, GLFW_KEY_P)) {
@@ -236,11 +247,21 @@ protected:
             worldLoader.readMatrixJson();
             setWorld();
             setCamera();
+            setHero();
             std::cout << "Reset World" << std::endl;
         }
 
+
+
         if (!pause) {
-            skin->move(glm::vec3(0, -HeroMovingSpeed, 0));
+            // Theta = (Theta > 360 ? Theta = 0 : Theta);
+            tx = Radius * sin(glm::radians(-Theta));
+            ty = Radius * cos(glm::radians(-Theta));
+            Theta += HeroMovingSpeed;
+            if(Theta > 360) {
+                Theta = 0;
+            }
+            skin->move(glm::vec3(-tx, -ty, 0));
             skin->updateAnimation(frameTime);
         }
 
@@ -250,6 +271,11 @@ protected:
             camera.print();
             auto pos = skin->getPosition();
             std::cout << "Skin Position: " << pos.x << ", " << pos.y << ", " << pos.z << std::endl;
+            std::cout << "Hero Speed: " << HeroMovingSpeed << std::endl;
+            std::cout << "Hero Radius: " << Radius << std::endl;
+            std::cout << "Hero tx: " << -tx << std::endl;
+            std::cout << "Hero ty: " << -ty << std::endl;
+            std::cout << "Hero Theta: " << Theta << std::endl;
         }
 
         camera.lookAt(skin->getPosition());

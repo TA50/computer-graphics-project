@@ -12,8 +12,10 @@
 
 class App : public BaseProject {
 protected:
-    Skin *skin;
-    Skin *villan;
+    const std::string pepsimanId = "pepsiman";
+    const std::string lunaId = "luna";
+    Skin *pepsiman;
+    Skin *luna;
     glm::vec3 CamPos = glm::vec3(0.0, 0.1, 5.0);
     glm::mat4 ViewMatrix;
     float Ar;
@@ -25,13 +27,8 @@ protected:
 
     Camera camera;
 
-    GameObject *sphere = new GameObject("sphere");
-    GameObject *road = new GameObject("road");
-    GameObject *colaCan = new GameObject("cola-can");
-
-
-    std::vector<GameObject *> gameObjects = {road, colaCan};
-    std::vector<GameObject *> roads = {};
+    std::unordered_map<std::string, GameObject *> gameObjects;
+    std::unordered_map<std::string, Skin *> skins;
 
     glm::vec3 CameraInitialPosition = glm::vec3(0, 2.07f, 2);
 
@@ -56,76 +53,32 @@ protected:
     }
 
     void loadModels() {
-        tinygltf::Model model = GltfLoader::loadGlTFFile("assets/models/pepsiman/scene.gltf");
-        std::vector<Skin *> skins{};
-        for (const auto &skin: model.skins) {
-            skins.push_back(new Skin(GltfLoader::loadSkin(model, skin)));
-        }
-
-        skin = skins[0];
-        GltfLoader::loadAnimations(skin, model);
-
-        // load golem
-        model = GltfLoader::loadGlTFFile("assets/models/lynx_-_stars_-_animated/scene.gltf");
-
-        std::vector<Skin *> gskins{};
-        for (const auto &skin: model.skins) {
-            gskins.push_back(new Skin(GltfLoader::loadSkin(model, skin)));
-        }
-
-        villan = gskins[0];
-        GltfLoader::loadAnimations(villan, model, 2);
-
-//        golem->setActiveAnimation(2);
-        auto result = GameObjectLoader::loadGltf("assets/models/low_road/long road.gltf");
-        road->setName("Road");
-        road->setBaseTexture("assets/models/low_road/textures/Material.002_baseColor.jpeg",
-                             VK_FORMAT_R8G8B8A8_UNORM,
-                             true);
-        road->setCullMode(VK_CULL_MODE_NONE);
-        road->setVertices(result.vertices);
-        road->setIndices(result.indices);
-
-        result = GameObjectLoader::loadGltf("assets/models/cola-can/cola.gltf");
-        colaCan->setName("Cola Can");
-        colaCan->setBaseTexture("assets/models/cola-can/textures/Material_001_baseColor.png",
-                                VK_FORMAT_R8G8B8A8_UNORM,
-                                true);
-        colaCan->setCullMode(VK_CULL_MODE_NONE);
-        colaCan->setVertices(result.vertices);
-        colaCan->setIndices(result.indices);
-
-
+        gameObjects = worldLoader.loadGameObjects();
+        std::cout << "Game Objects loaded" << std::endl;
+        skins = worldLoader.loadSkins();
+        std::cout << "Skins loaded" << std::endl;
+        pepsiman = skins[pepsimanId];
+        luna = skins[lunaId];
     }
 
     void setWorld() {
-        std::vector<GameObject *> transformed = {road, colaCan};
-        for (auto go: transformed) {
-
-            auto scale = worldLoader.get(go->getId(), SCALE);
-            auto rotation = worldLoader.get(go->getId(), ROTATE);
-            auto translation = worldLoader.get(go->getId(), TRANSLATE);
+        for (auto [id, go]: gameObjects) {
+            auto scale = worldLoader.get(go->getId(), GAME_OBJECT, SCALE);
+            auto rotation = worldLoader.get(go->getId(), GAME_OBJECT, ROTATE);
+            auto translation = worldLoader.get(go->getId(), GAME_OBJECT, TRANSLATE);
             go->setTranslation(translation);
             go->setRotation(rotation);
             go->scale(scale);
-//            go->setWorldMatrix(glm::mat4(1));
-//            go->updateWorld();
-
-//            auto model = go->getModel();
-//            std::cout << go->getName();
-//            Printer::printArrArr(model);
-
-            go->changeModelCenter(glm::vec3(0, 0, 0));
         }
-
-
-        villan->setTranslation(worldLoader.get("luna", TRANSLATE));
-        villan->setRotation(worldLoader.get("luna", ROTATE));
-        villan->setScaling(worldLoader.get("luna", SCALE));
-        villan->updateWorldMatrix();
-        villan->setCameraFollow(false);
-
-
+        for (auto [id, sk]: skins) {
+            auto scale = worldLoader.get(sk->getId(), SKIN, SCALE);
+            auto rotation = worldLoader.get(sk->getId(), SKIN, ROTATE);
+            auto translation = worldLoader.get(sk->getId(), SKIN, TRANSLATE);
+            sk->setTranslation(translation);
+            sk->setRotation(rotation);
+            sk->setScaling(scale);
+            sk->updateWorldMatrix();
+        }
     }
 
     void setGameConfig() {
@@ -148,29 +101,22 @@ protected:
         setGameConfig();
 
 
-        for (auto go: gameObjects) {
+        for (auto [id, go]: gameObjects) {
             DPSZs.uniformBlocksInPool += go->getPoolSizes().uniformBlocksInPool;
             DPSZs.texturesInPool += go->getPoolSizes().texturesInPool;
             DPSZs.setsInPool += go->getPoolSizes().setsInPool;
 
             go->init(this, &camera);
         }
+        for (auto [id, sk]: skins) {
+            DPSZs.uniformBlocksInPool += sk->getPoolSizes().uniformBlocksInPool;
+            DPSZs.texturesInPool += sk->getPoolSizes().texturesInPool;
+            DPSZs.setsInPool += sk->getPoolSizes().setsInPool;
 
-        std::cout << "Game Objects initialized" << std::endl;
-        auto skinDPSZs = Skin::getPoolSizes();
-        skin->init(this, &camera, "assets/models/pepsiman/textures/Pepsiman_baseColor.png");
-        villan->init(this, &camera, "assets/models/lynx_-_stars_-_animated/textures/stars_baseColor.png");
+            sk->init(this, &camera);
+        }
 
-        std::cout << "Skin initialized" << std::endl;
-        DPSZs.uniformBlocksInPool += skinDPSZs.uniformBlocksInPool * 2 + skinDPSZs.uniformBlocksInPool * 2;
-        DPSZs.texturesInPool += skinDPSZs.texturesInPool * 2;
-        DPSZs.setsInPool += skinDPSZs.setsInPool * 2;
-
-
-        std::cout << "Uniform Blocks: " << DPSZs.uniformBlocksInPool << std::endl;
-        std::cout << "Textures: " << DPSZs.texturesInPool << std::endl;
-        std::cout << "Sets: " << DPSZs.setsInPool << std::endl;
-
+        std::cout << "Model initialized" << std::endl;
     }
 
 
@@ -191,8 +137,8 @@ protected:
 
         if (glfwGetKey(window, GLFW_KEY_0)) {
             // RESET
-            skin->setTranslation(glm::vec3(0));
-            villan->setTranslation(glm::vec3(0));
+            pepsiman->setTranslation(glm::vec3(0));
+            luna->setTranslation(glm::vec3(0));
         }
         if (glfwGetKey(window, GLFW_KEY_P)) {
             pause = false;
@@ -213,30 +159,30 @@ protected:
 
 
         if (!pause) {
-            skin->move(glm::vec3(0, -gameConfig.heroSpeed, 0));
-            skin->updateAnimation(frameTime * gameConfig.heroAnimationSpeed);
-            villan->move(glm::vec3(0, -gameConfig.villainSpeed, 0));
-            villan->updateAnimation(frameTime*gameConfig.villainAnimationSpeed);
-
+            pepsiman->move(glm::vec3(0, -gameConfig.heroSpeed, 0));
+            pepsiman->updateAnimation(frameTime * gameConfig.heroAnimationSpeed);
+            luna->move(glm::vec3(0, -gameConfig.villainSpeed, 0));
+            luna->updateAnimation(frameTime * gameConfig.villainAnimationSpeed);
         }
 
         camera.rotate(-r.y * deltaT, -r.x * deltaT, -r.z * deltaT);
-//        camera.translate(glm::vec3(-m.x * deltaT, -m.y * deltaT, -m.z * deltaT));
+
         if (glfwGetKey(window, GLFW_KEY_V)) {
             camera.print();
-            auto pos = skin->getPosition();
+            auto pos = pepsiman->getPosition();
             std::cout << "Skin Position: " << pos.x << ", " << pos.y << ", " << pos.z << std::endl;
             gameConfig.print();
         }
 
-        camera.lookAt(skin->getPosition());
+        camera.lookAt(pepsiman->getPosition());
         camera.updateWorld();
         camera.updateViewMatrix();
-//        camera.updatePerspective();
-        skin->render(currentImage, axisInput);
-        villan->render(currentImage, axisInput);
 
-        for (auto go: gameObjects) {
+
+        for (auto [id, sk]: skins) {
+            sk->render(currentImage);
+        }
+        for (auto [id, go]: gameObjects) {
             go->render(currentImage);
         }
 
@@ -244,42 +190,44 @@ protected:
 
 
     void pipelinesAndDescriptorSetsInit() override {
-
-        skin->createPipelineAndDescriptorSets();
-        villan->createPipelineAndDescriptorSets();
-        for (auto go: gameObjects) {
-            go->pipelinesAndDescriptorSetsInit();
+        for (auto [id, sk]: skins) {
+            sk->createPipelineAndDescriptorSets();
         }
 
+        for (auto [id, go]: gameObjects) {
+            go->pipelinesAndDescriptorSetsInit();
+        }
     }
 
     void pipelinesAndDescriptorSetsCleanup() override {
+        for (auto [id, sk]: skins) {
+            sk->pipelinesAndDescriptorSetsCleanup();
+        }
 
-        skin->pipelinesAndDescriptorSetsCleanup();
-        villan->pipelinesAndDescriptorSetsCleanup();
-        for (auto go: gameObjects) {
+        for (auto [id, go]: gameObjects) {
             go->pipelinesAndDescriptorSetsCleanup();
         }
     }
 
 
     void localCleanup() override {
-        skin->localCleanup();
-        villan->localCleanup();
-        for (auto go: gameObjects) {
+
+        for (auto [id, sk]: skins) {
+            sk->localCleanup();
+        }
+        for (auto [id, go]: gameObjects) {
             go->localCleanup();
         }
     }
 
 
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) override {
-
-        skin->bind(commandBuffer, currentImage);
-        villan->bind(commandBuffer, currentImage);
-        for (auto go: gameObjects) {
+        for (auto [id, sk]: skins) {
+            sk->bind(commandBuffer, currentImage);
+        }
+        for (auto [id, go]: gameObjects) {
             go->populateCommandBuffer(commandBuffer, currentImage);
         }
-
     }
 
 };

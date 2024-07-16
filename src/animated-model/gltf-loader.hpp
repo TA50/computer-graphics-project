@@ -1,5 +1,7 @@
 #pragma  once
 
+#include <utility>
+
 #include "animated-model/skin.hpp"
 
 
@@ -21,7 +23,7 @@ public:
         }
     }
 
-    static Skin loadSkin(const tinygltf::Model &model, const tinygltf::Skin &gltfSkin) {
+    static void loadSkin(const tinygltf::Model &model, const tinygltf::Skin &gltfSkin, Skin *skin) {
 
 
         // Load All Joints:
@@ -38,7 +40,7 @@ public:
         int jointsCount = static_cast<int>(gltfSkin.joints.size());
 
 
-        Skin skin = Skin(gltfSkin.name, jointsCount);
+
 
         // 1. Load Inverse Bind Matrices and joints
         auto inverseBindMatrices = std::vector<glm::mat4>(jointsCount);
@@ -52,7 +54,7 @@ public:
         for (size_t i = 0; i < jointsCount; ++i) {
             auto jointIndex = gltfSkin.joints[i];
             glm::mat4 inverseBindMatrix = glm::make_mat4(data + i * 16);
-            skin.addJoint(jointMap[jointIndex], inverseBindMatrix, jointIndex);
+            skin->addJoint(jointMap[jointIndex], inverseBindMatrix, jointIndex);
         }
 
         // find skin root
@@ -66,7 +68,7 @@ public:
         if (rootIndex == -1) {
             throw std::runtime_error("No root joint found for skin");
         }
-        skin.setRootJoint(jointMap[rootIndex], rootIndex);
+        skin->setRootJoint(jointMap[rootIndex], rootIndex);
 
 
         // 3. Load Vertices and Indices (assuming single mesh and primitive)
@@ -116,7 +118,7 @@ public:
 
             vertex.inColor = glm::vec4(1.0f);
 
-            skin.addVertex(vertex);
+            skin->addVertex(vertex);
         }
 
         // Load indices
@@ -128,18 +130,15 @@ public:
             const auto *indices = reinterpret_cast<const uint16_t *>(&indexBuffer.data[indexAccessor.byteOffset +
                                                                                        indexView.byteOffset]);
             for (size_t i = 0; i < indexAccessor.count; ++i) {
-                skin.addIndex(indices[i]);
+                skin->addIndex(indices[i]);
             }
         } else if (indexAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT) {
             const auto *indices = reinterpret_cast<const uint32_t *>(&indexBuffer.data[indexAccessor.byteOffset +
                                                                                        indexView.byteOffset]);
             for (size_t i = 0; i < indexAccessor.count; ++i) {
-                skin.addIndex(indices[i]);
+                skin->addIndex(indices[i]);
             }
         }
-
-
-        return skin;
     }
 
     static Joint *
@@ -179,7 +178,7 @@ public:
     }
 
 
-    static void loadAnimations(Skin *skin, tinygltf::Model &input, int i = 0) {
+    static void loadAnimations(Skin *skin, tinygltf::Model &input) {
         skin->animations.resize(input.animations.size());
 
         for (size_t i = 0; i < input.animations.size(); i++) {

@@ -1,10 +1,7 @@
 #include "App.hpp"
-#include "animated-model/skin.hpp"
-#include "game-object-loader.hpp"
 
 int main() {
     App app;
-
     try {
         app.run();
     }

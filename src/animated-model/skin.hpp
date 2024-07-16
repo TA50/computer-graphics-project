@@ -63,8 +63,7 @@ class Skin {
 public:
     std::vector<Animation> animations;
 
-    explicit Skin(std::string name, int jointsCount, bool pCameraFollow = true) : name(std::move(name)),
-                                                                                  jointsCount(jointsCount) {
+    explicit Skin(bool pCameraFollow = false){
         rootJointIndex = -1;
         cameraFollow = pCameraFollow;
         joints = std::unordered_map<int, Joint *>();
@@ -88,7 +87,7 @@ public:
     }
 
 
-    void init(BaseProject *bp, Camera *_camera, std::string baseTexture) {
+    void init(BaseProject *bp, Camera *_camera) {
         BP = bp;
         camera = _camera;
         VD.init(bp, SkinVertex::getBindingDescription(), SkinVertex::getDescriptorElements());
@@ -97,7 +96,7 @@ public:
                 {InverseBindMatrix_BINDING, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(SkinInverseBindMatrixObject), 1},
                 {Base_Texture_Binding,      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                   1},
         });
-        BaseTexture.init(bp, baseTexture);
+        BaseTexture.init(bp, baseTexturePath);
 
         P.init(bp, &VD, VERT_SHADER, FRAG_SHADER, {&DSL});
         P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
@@ -134,8 +133,7 @@ public:
         mapInverseBindMatrices(currentImage);
     }
 
-    void render(uint32_t currentImage, AxisInput input) {
-
+    void render(uint32_t currentImage) {
         updateJointMatrices();
         updateUniformBuffers(currentImage);
     }
@@ -205,6 +203,19 @@ public:
 
 
     // Setters
+    void setName(std::string pName) {
+        this->name = pName;
+    }
+
+    void setId(std::string pId) {
+        this->id = pId;
+    }
+
+    void setBaseTexture(std::string filePath, VkFormat Fmt, bool initSampler = false) {
+        baseTexturePath = filePath;
+        baseTextureFormat = Fmt;
+        baseTextureInitSampler = initSampler;
+    }
 
     void setCameraFollow(bool cameraFollow) {
         this->cameraFollow = cameraFollow;
@@ -382,8 +393,13 @@ public:
         return jointMatrix;
     }
 
+    std::string getId() {
+        return id;
+    }
 
 protected:
+
+
 
     glm::mat4 worldMatrix = glm::mat4(1.0f);
     glm::vec3 translation = glm::vec3(0.0f);
@@ -396,11 +412,16 @@ protected:
     Joint *rootJoint;
     int jointsCount;
     std::string name;
+    std::string id;
     std::unordered_map<int, Joint *> joints;
     std::vector<SkinVertex> vertices;
     std::vector<uint32_t> indices;
     std::unordered_map<int, glm::mat4> inverseBindMatrices;
     std::unordered_map<int, glm::mat4> jointMatrices{};
+
+    VkFormat baseTextureFormat;
+    bool baseTextureInitSampler;
+    std::string baseTexturePath;
 
 
     DescriptorSetLayout DSL;

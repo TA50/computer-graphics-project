@@ -8,6 +8,7 @@
 #include "game-object.hpp"
 #include "game-object-loader.hpp"
 #include "world-loader.hpp"
+#include "light-object.hpp"
 
 
 class App : public BaseProject {
@@ -17,10 +18,10 @@ protected:
     Skin *pepsiman;
     Skin *luna;
     glm::vec3 CamPos = glm::vec3(0.0, 0.1, 5.0);
-    glm::mat4 ViewMatrix;
     float Ar;
 
     GameConfig gameConfig;
+    LightConfig lightConfig;
 
 
     WorldLoader worldLoader = WorldLoader("assets/world.json");
@@ -32,13 +33,15 @@ protected:
 
     glm::vec3 CameraInitialPosition = glm::vec3(0, 2.07f, 2);
 
+    Light lightObject = Light();
+
     // Here you set the main application parameters
     void setWindowParameters() override {
         windowWidth = 800;
         windowHeight = 600;
         windowTitle = "App Name";
         windowResizable = GLFW_TRUE;
-        initialBackgroundColor = {0.1f, 0.1f, 0.1f, 1.0f};
+        initialBackgroundColor = {0.001f, 0.001f, 0.001f, 1.0f};
 
         Ar = (float) windowWidth / (float) windowHeight;
 
@@ -52,10 +55,11 @@ protected:
         camera.updatePerspective();
     }
 
-    void loadModels() {
-        gameObjects = worldLoader.loadGameObjects();
+
+    void loadModels(Light *lightObject) {
+        gameObjects = worldLoader.loadGameObjects(lightObject);
         std::cout << "Game Objects loaded" << std::endl;
-        skins = worldLoader.loadSkins();
+        skins = worldLoader.loadSkins(lightObject);
         std::cout << "Skins loaded" << std::endl;
         pepsiman = skins[pepsimanId];
         luna = skins[lunaId];
@@ -81,8 +85,11 @@ protected:
         }
     }
 
-    void setGameConfig() {
+    void setLightConfig() {
+        worldLoader.setLight(&lightConfig);
+    }
 
+    void setGameConfig() {
         worldLoader.setGame(&gameConfig);
     }
 
@@ -93,9 +100,19 @@ protected:
 
 
     void localInit() {
-
         worldLoader.readMatrixJson();
-        loadModels();
+
+        setLightConfig();
+        lightObject.init(this);
+        auto lightDir = glm::vec3(cos(glm::radians(lightConfig.ang1)) * cos(glm::radians(lightConfig.ang2)), sin(glm::radians(lightConfig.ang1)),
+                                  cos(glm::radians(lightConfig.ang1)) * sin(glm::radians(lightConfig.ang2)));
+        auto lightColor = glm::vec4(lightConfig.r, lightConfig.g, lightConfig.b, lightConfig.a);
+        auto eyePos = glm::vec3(glm::inverse(camera.matrices.view) * glm::vec4(0, 0, 0, 1));
+
+        lightObject.setUBO(lightDir, lightColor, eyePos, camera.CamPosition);
+        std::cout << "Light initialized" << std::endl;
+
+        loadModels(&lightObject);
         setCamera();
         setWorld();
         setGameConfig();
@@ -106,12 +123,20 @@ protected:
             DPSZs.texturesInPool += go->getPoolSizes().texturesInPool;
             DPSZs.setsInPool += go->getPoolSizes().setsInPool;
 
+            DPSZs.uniformBlocksInPool += lightObject.getPoolSizes().uniformBlocksInPool;
+            DPSZs.texturesInPool += lightObject.getPoolSizes().texturesInPool;
+            DPSZs.setsInPool += lightObject.getPoolSizes().setsInPool;
+
             go->init(this, &camera);
         }
         for (auto [id, sk]: skins) {
             DPSZs.uniformBlocksInPool += sk->getPoolSizes().uniformBlocksInPool;
             DPSZs.texturesInPool += sk->getPoolSizes().texturesInPool;
             DPSZs.setsInPool += sk->getPoolSizes().setsInPool;
+
+            DPSZs.uniformBlocksInPool += lightObject.getPoolSizes().uniformBlocksInPool;
+            DPSZs.texturesInPool += lightObject.getPoolSizes().texturesInPool;
+            DPSZs.setsInPool += lightObject.getPoolSizes().setsInPool;
 
             sk->init(this, &camera);
         }
@@ -148,11 +173,20 @@ protected:
         }
         if (glfwGetKey(window, GLFW_KEY_B)) {
             worldLoader.readMatrixJson();
+            setLightConfig();
+            auto lightDir = glm::vec3(cos(glm::radians(lightConfig.ang1)) * cos(glm::radians(lightConfig.ang2)), sin(glm::radians(lightConfig.ang1)),
+                                              cos(glm::radians(lightConfig.ang1)) * sin(glm::radians(lightConfig.ang2)));
+            auto lightColor = glm::vec4(lightConfig.r, lightConfig.g, lightConfig.b, lightConfig.a);
+            auto eyePos = glm::vec3(glm::inverse(camera.matrices.view) * glm::vec4(lightConfig.x, lightConfig.y, lightConfig.z, 1));
+            lightObject.setUBO(lightDir, lightColor, eyePos, camera.CamPosition);
             setWorld();
             setCamera();
             setGameConfig();
             std::cout << "Reset World" << std::endl;
+
         }
+
+
 
         auto Rz = glm::rotate(glm::mat4(1), glm::radians(10.0f), glm::vec3(1, 0, 0));
         auto T = glm::translate(glm::mat4(1), glm::vec3(0.1, gameConfig.villainSpeed, 0));

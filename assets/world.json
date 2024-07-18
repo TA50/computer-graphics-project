@@ -5,6 +5,22 @@
     "villainAnimationSpeed": 3,
     "heroAnimationSpeed": 2
   },
+  "light": {
+    "ang1": 135.0,
+    "ang2": 45.0,
+    "ang3": 0.0,
+    "color": {
+      "r": 2,
+      "g": 2,
+      "b": 2,
+      "a": 1
+    },
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    }
+  },
   "camera": {
     "euler": {
       "yaw": 180,
@@ -22,7 +38,7 @@
       "z": 0
     },
     "perspective": {
-      "fov": 50,
+      "fov": 20,
       "near": 0.1,
       "far": 500
     },
@@ -36,33 +52,33 @@
       "baseTexture": "assets/textures/2k_sun.jpg",
       "cull": true,
 
-        "scale": {
-          "x": 0.2,
-          "y": 0.2,
-          "z": 0.2
-        },
-        "translate": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "rotate": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        }
+      "scale": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "translate": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotate": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
 
     },
     "road": {
       "name": "Road",
       "modelPath": "assets/models/low_road/long road.gltf",
       "modelType": "gltf",
-      "baseTexture": "assets/models/low_road/textures/Material.002_baseColor.jpeg",
+      "baseTexture": "assets/models/low_road/textures/Material_006_baseColor.jpg",
       "cull": false,
       "scale": {
-        "x": 7,
-        "y": 1,
-        "z": 11
+        "x": 0,
+        "y": 0,
+        "z": 0
       },
       "translate": {
         "x": 0,
@@ -105,9 +121,9 @@
       "baseTexture": "assets/models/lynx_-_stars_-_animated/textures/stars_baseColor.png",
       "cameraFollow": false,
       "scale": {
-        "x": 1,
-        "y": 1,
-        "z": 1
+        "x": 0,
+        "y": 0,
+        "z": 0
       },
       "translate": {
         "x": 0,
@@ -124,6 +140,8 @@
       "name": "Pepsi man",
       "modelPath": "assets/models/pepsiman/scene.gltf",
       "baseTexture": "assets/models/pepsiman/textures/Pepsiman_baseColor.png",
+      "metallicTexture": "assets/models/pepsiman/textures/Pepsiman_metallicRoughness.png",
+      "roughnessTexture": "assets/models/pepsiman/textures/Pepsiman_metallicRoughness.png",
       "cameraFollow": true,
       "scale": {
         "x": 1,

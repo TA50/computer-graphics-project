@@ -6,6 +6,7 @@ layout(location = 2) in vec2 inUV;
 layout(location = 3) in ivec4 inJointIndices;
 layout(location = 4) in vec4 inJointWeights;
 layout(location = 5) in vec3 inColor;
+layout(location = 6) in vec4 inTan;
 
 layout(set = 0, binding = 0) uniform UBO {
     mat4 model;
@@ -24,6 +25,8 @@ layout (location = 1) out vec3 outColor;
 layout (location = 2) out vec2 outUV;
 layout (location = 3) out vec3 outViewVec;
 layout (location = 4) out vec3 outLightVec;
+layout (location = 5) out vec4 fragTan;
+layout (location = 6) out vec3 fragPos;
 
 
 
@@ -35,7 +38,7 @@ mat4 calcSkinMat() {
     inJointWeights.w * ubo.jointTransformMatrices[int(inJointIndices.w)];
     return skinMat;
 }
-void main() {
+void main2() {
     outNormal = inNormal;
     outColor = inColor;
     outUV = inUV;
@@ -47,11 +50,28 @@ void main() {
     outNormal = normalize(transpose(inverse(mat3(viewModel * skinMat))) * inNormal);
 
     vec4 pos = ubo.view * vec4(inPosition, 1.0);
+    vec3 lPos = mat3(ubo.view) * vec3(0.5, 0.5, 0.5);
+    outLightVec = lPos - pos.xyz;
+    outViewVec = -pos.xyz;
+    fragTan = vec4((vec4(1.0) * vec4(inTan.xyz, 0.0)).xyz, inTan.w);
+    fragPos = vec3(ubo.model * vec4(inPosition, 1.0));
+}
+void main() {
+    outNormal = inNormal;
+    outColor = inColor;
+    outUV = inUV;
+
+    mat4 skinMat = calcSkinMat();
+    mat4 viewModel = ubo.view * ubo.model;
+    gl_Position = ubo.proj * viewModel * skinMat * vec4(inPosition.xyz, 1.0);
+
+    outNormal = normalize(transpose(inverse(mat3(viewModel * skinMat))) * inNormal);
+
+    vec4 pos = ubo.view * vec4(inPosition, 1.0);
     vec3 lPos = mat3(ubo.view) * ubo.lightPos.xyz;
     outLightVec = lPos - pos.xyz;
     outViewVec = -pos.xyz;
+
 }
-
-
 
 

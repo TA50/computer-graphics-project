@@ -13,7 +13,6 @@ public:
         std::string error, warning;
         bool fileLoaded = gltfContext.LoadASCIIFromFile(&glTFInput, &error, &warning, filename);
         if (fileLoaded) {
-
             std::cout << filename << " : " << "File loaded successfully" << std::endl;
             return glTFInput;
         } else {
@@ -24,8 +23,6 @@ public:
     }
 
     static void loadSkin(const tinygltf::Model &model, const tinygltf::Skin &gltfSkin, Skin *skin) {
-
-
         // Load All Joints:
 
         std::unordered_map<int, Joint *> jointMap;
@@ -40,16 +37,14 @@ public:
         int jointsCount = static_cast<int>(gltfSkin.joints.size());
 
 
-
-
         // 1. Load Inverse Bind Matrices and joints
         auto inverseBindMatrices = std::vector<glm::mat4>(jointsCount);
         const tinygltf::Accessor &accessor = model.accessors[gltfSkin.inverseBindMatrices];
         const tinygltf::BufferView &bufferView = model.bufferViews[accessor.bufferView];
         const tinygltf::Buffer &buffer = model.buffers[bufferView.buffer];
-//        std::unordered_map<int, Joint *> jointMap;
+        //        std::unordered_map<int, Joint *> jointMap;
 
-// inverse bind matrices
+        // inverse bind matrices
         const auto *data = reinterpret_cast<const float *>(&buffer.data[accessor.byteOffset + bufferView.byteOffset]);
         for (size_t i = 0; i < jointsCount; ++i) {
             auto jointIndex = gltfSkin.joints[i];
@@ -82,6 +77,16 @@ public:
         const tinygltf::Accessor &posAccessor = model.accessors[primitive.attributes.find("POSITION")->second];
         const tinygltf::Accessor &normalAccessor = model.accessors[primitive.attributes.find("NORMAL")->second];
         const tinygltf::Accessor &uvAccessor = model.accessors[primitive.attributes.find("TEXCOORD_0")->second];
+        const float *tangentData = nullptr;
+        auto tIt = primitive.attributes.find("TANGENT");
+        if (tIt != primitive.attributes.end()) {
+            const tinygltf::Accessor tangentAccessor = model.accessors[primitive.attributes.find("TANGENT")->second];
+            const tinygltf::BufferView &tangentView = model.bufferViews[tangentAccessor.bufferView];
+            tangentData = reinterpret_cast<const float *>(&model.buffers[tangentView.buffer].data[
+            tangentAccessor.byteOffset + tangentView.byteOffset]);
+        }
+
+
         const tinygltf::Accessor &jointAccessor = model.accessors[primitive.attributes.find("JOINTS_0")->second];
         const tinygltf::Accessor &weightAccessor = model.accessors[primitive.attributes.find("WEIGHTS_0")->second];
 
@@ -92,15 +97,15 @@ public:
         const tinygltf::BufferView &weightView = model.bufferViews[weightAccessor.bufferView];
 
         const auto *posData = reinterpret_cast<const float *>(&model.buffers[posView.buffer].data[
-                posAccessor.byteOffset + posView.byteOffset]);
+            posAccessor.byteOffset + posView.byteOffset]);
         const auto *normalData = reinterpret_cast<const float *>(&model.buffers[normalView.buffer].data[
-                normalAccessor.byteOffset + normalView.byteOffset]);
+            normalAccessor.byteOffset + normalView.byteOffset]);
         const auto *uvData = reinterpret_cast<const float *>(&model.buffers[uvView.buffer].data[uvAccessor.byteOffset +
-                                                                                                uvView.byteOffset]);
+            uvView.byteOffset]);
         const auto *jointData = reinterpret_cast<const uint16_t *>(&model.buffers[jointView.buffer].data[
-                jointAccessor.byteOffset + jointView.byteOffset]);
+            jointAccessor.byteOffset + jointView.byteOffset]);
         const auto *weightData = reinterpret_cast<const float *>(&model.buffers[weightView.buffer].data[
-                weightAccessor.byteOffset + weightView.byteOffset]);
+            weightAccessor.byteOffset + weightView.byteOffset]);
 
         for (size_t i = 0; i < posAccessor.count; ++i) {
             SkinVertex vertex{};
@@ -108,6 +113,12 @@ public:
             vertex.pos = glm::vec3(posData[i * 3], posData[i * 3 + 1], posData[i * 3 + 2]);
             vertex.normal = glm::vec3(normalData[i * 3], normalData[i * 3 + 1], normalData[i * 3 + 2]);
             vertex.uv = glm::vec2(uvData[i * 2], uvData[i * 2 + 1]);
+            if(tangentData != nullptr) {
+                vertex.tangent = glm::vec4(tangentData[i * 4], tangentData[i * 4 + 1], tangentData[i * 4 + 2],
+                                           tangentData[i * 4 + 3]);
+            }else {
+                vertex.tangent = glm::vec4(0.0f);
+            }
             auto jointIndices = glm::ivec4(jointData[i * 4], jointData[i * 4 + 1], jointData[i * 4 + 2],
                                            jointData[i * 4 + 3]);
             vertex.jointIndices = glm::ivec4(gltfSkin.joints[jointIndices[0]], gltfSkin.joints[jointIndices[1]],
@@ -128,13 +139,13 @@ public:
 
         if (indexAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT) {
             const auto *indices = reinterpret_cast<const uint16_t *>(&indexBuffer.data[indexAccessor.byteOffset +
-                                                                                       indexView.byteOffset]);
+                indexView.byteOffset]);
             for (size_t i = 0; i < indexAccessor.count; ++i) {
                 skin->addIndex(indices[i]);
             }
         } else if (indexAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT) {
             const auto *indices = reinterpret_cast<const uint32_t *>(&indexBuffer.data[indexAccessor.byteOffset +
-                                                                                       indexView.byteOffset]);
+                indexView.byteOffset]);
             for (size_t i = 0; i < indexAccessor.count; ++i) {
                 skin->addIndex(indices[i]);
             }
@@ -164,7 +175,6 @@ public:
             joint->setLocalMatrix(glm::make_mat4(node.matrix.data()));
         } else {
             joint->setLocalMatrix(glm::mat4(1));
-
         }
 
         // Load children
@@ -235,7 +245,7 @@ public:
                         }
                         case TINYGLTF_TYPE_VEC4: {
                             alignas(16) const auto *buf = static_cast<const glm::vec4 *>(dataPtr);
-//                            dstSampler.outputsVec4.resize(accessor.count);
+                            //                            dstSampler.outputsVec4.resize(accessor.count);
                             for (size_t index = 0; index < accessor.count; index++) {
                                 dstSampler.outputsVec4.push_back(buf[index]);
                             }
@@ -247,7 +257,6 @@ public:
                         }
                     }
                 }
-
             }
 
 
@@ -262,6 +271,4 @@ public:
             }
         }
     }
-
-
 };

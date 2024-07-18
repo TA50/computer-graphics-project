@@ -1,6 +1,8 @@
 // This has been adapted from the Vulkan tutorial
 #pragma once
 
+#include <light-object.hpp>
+
 #include "modules/Starter.hpp"
 #include "camera.hpp"
 #include "common.hpp"
@@ -50,6 +52,14 @@ public:
 
     }
 
+    void setLight(Light *lightObject) {
+        lubo = lightObject->getUBO();
+        GDSL = lightObject->getDSL();
+        GDS = lightObject->getDS();
+        this->lightObject = lightObject;
+    }
+
+
     void setName(std::string n) {
         name = n;
     }
@@ -82,6 +92,24 @@ public:
         baseTextureInitSampler = initSampler;
     }
 
+    void setMetalicTexture(std::string filePath, VkFormat Fmt, bool initSampler = false) {
+        metalicTexturePath = filePath;
+        metalicTextureFormat = Fmt;
+        metalicTextureInitSampler = initSampler;
+    }
+
+    void setRoughnessTexture(std::string filePath, VkFormat Fmt, bool initSampler = false) {
+        roughnessTexturePath = filePath;
+        roughnessTextureFormat = Fmt;
+        roughnessTextureInitSampler = initSampler;
+    }
+
+    void setDiffuseTexture(std::string filePath, VkFormat Fmt, bool initSampler = false) {
+        diffuseTexturePath = filePath;
+        diffuseTextureFormat = Fmt;
+        diffuseTextureInitSampler = initSampler;
+    }
+
     std::string getId() {
         return id;
     }
@@ -90,7 +118,7 @@ public:
         PoolSizes poolSizes{};
         poolSizes.setsInPool = 1;
         poolSizes.uniformBlocksInPool = 1;
-        poolSizes.texturesInPool = 1;
+        poolSizes.texturesInPool = 4;
         return poolSizes;
     }
 
@@ -101,14 +129,25 @@ public:
                 {MVP_BINDING,          VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS,
                                                                                                                 sizeof(GameObjectUniformBufferObject), 1},
                 {BASE_TEXTURE_BINDING, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                     1},
+                {METALIC_TEXTURE_BINDING, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                     1},
+                {ROUGHNESS_TEXTURE_BINDING, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                     1},
+                {DIFFUSE_TEXTURE_BINDING, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                     1},
         });
         VD.init(bp, GameObjectVertex::getBindingDescription(),
                 GameObjectVertex::getDescriptorElements());
 
         BaseTexture.init(BP, baseTexturePath, baseTextureFormat, baseTextureInitSampler);
+        if(!metalicTexturePath.empty()) {
+            MetalicTexture.init(BP, metalicTexturePath, metalicTextureFormat, metalicTextureInitSampler);
+        }
+        if(!diffuseTexturePath.empty()) {
+            DiffuseTexture.init(BP, diffuseTexturePath, diffuseTextureFormat, diffuseTextureInitSampler);
+        }
+        if(!roughnessTexturePath.empty()) {
+            RoughnessTexture.init(BP, roughnessTexturePath, roughnessTextureFormat, roughnessTextureInitSampler);
+        }
 
-
-        P.init(BP, &VD, VERT_SHADER, FRAG_SHADER, {&DSL});
+        P.init(BP, &VD, VERT_SHADER, FRAG_SHADER, {&DSL, &GDSL});
         P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
                               cullMode, false);
 
@@ -124,6 +163,7 @@ public:
     void pipelinesAndDescriptorSetsInit() {
         P.create();
         DS.init(BP, &DSL, {&BaseTexture});
+        GDS.init(BP, &GDSL, {});
     }
 
     void pipelinesAndDescriptorSetsCleanup() {
@@ -151,6 +191,7 @@ public:
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
         P.bind(commandBuffer);
         DS.bind(commandBuffer, P, SET_ID, currentImage);
+        GDS.bind(commandBuffer, P, SET_ID_LIGHT, currentImage);
         if (loaded) {
             M.bind(commandBuffer);
             vkCmdDrawIndexed(commandBuffer,
@@ -174,14 +215,17 @@ public:
     void render(uint32_t currentImage) {
 
         auto model = getModel();
-
         GameObjectUniformBufferObject ubo = GameObjectUniformBufferObject(model,
                                                                           camera->matrices.view,
                                                                           camera->matrices.perspective);
 
 
         DS.map((int) currentImage, &ubo, (int) SET_ID);
+        auto lubo = lightObject->getUBO();
+        GDS.map((int) currentImage, &lubo, 0);
+
     }
+
 
 
     void setTranslation(glm::vec3 pos) {
@@ -296,6 +340,7 @@ private:
     std::string name;
     std::string id;
     Camera *camera{};
+    Light * lightObject;
     BaseProject *BP{};
     glm::mat4 LocalMatrix = glm::mat4(1.0f);
     glm::mat4 OriginMatrix = glm::mat4(1.0f);
@@ -311,11 +356,30 @@ private:
     DescriptorSetLayout DSL;
     VertexDescriptor VD;
 
+    LightUnifromBufferObject lubo{};
+    DescriptorSetLayout GDSL;
+    DescriptorSet GDS;
+
     Texture BaseTexture{};
+    Texture MetalicTexture{};
+    Texture RoughnessTexture{};
+    Texture DiffuseTexture{};
 
     VkFormat baseTextureFormat;
     bool baseTextureInitSampler;
     std::string baseTexturePath;
+
+    VkFormat metalicTextureFormat;
+    bool metalicTextureInitSampler;
+    std::string metalicTexturePath;
+
+    VkFormat roughnessTextureFormat;
+    bool roughnessTextureInitSampler;
+    std::string roughnessTexturePath;
+
+    VkFormat diffuseTextureFormat;
+    bool diffuseTextureInitSampler;
+    std::string diffuseTexturePath;
 
     Model M;
     std::string modelPath;
@@ -337,8 +401,13 @@ private:
 
     uint32_t MVP_BINDING = 0;
     uint32_t BASE_TEXTURE_BINDING = 1;
+    uint32_t METALIC_TEXTURE_BINDING = 2;
+    uint32_t ROUGHNESS_TEXTURE_BINDING = 3;
+    uint32_t DIFFUSE_TEXTURE_BINDING = 4;
+
 
     uint32_t SET_ID = 0;
+    uint32_t SET_ID_LIGHT = 1;
 
     const std::string VERT_SHADER = "assets/shaders/bin/game-object.vert.spv";
     const std::string FRAG_SHADER = "assets/shaders/bin/game-object.frag.spv";

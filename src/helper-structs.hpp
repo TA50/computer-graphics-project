@@ -30,3 +30,17 @@ struct GameConfig{
         std::cout << "Can Speed: " << villainSpeed << std::endl;
     }
 };
+
+struct LightConfig {
+    float ang1 = 0.0f;
+    float ang2 = 0.0f;
+    float ang3 = 0.0f;
+    float r = 1.0f;
+    float g = 1.0f;
+    float b = 1.0f;
+    float a = 1.0f;
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+
+};

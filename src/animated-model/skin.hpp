@@ -1,5 +1,6 @@
 #pragma once
 
+#include <light-object.hpp>
 #include <string>
 #include <vector>
 #include "animated-model/joint.hpp"
@@ -20,12 +21,14 @@ public:
     glm::ivec4 jointIndices;
     glm::vec4 jointWeights;
     glm::vec3 inColor;
+    glm::vec4 tangent;
 
     static std::vector<VertexBindingDescriptorElement> getBindingDescription() {
         return {
                 {0, sizeof(SkinVertex), VK_VERTEX_INPUT_RATE_VERTEX},
         };
     }
+
 
     static std::vector<VertexDescriptorElement> getDescriptorElements() {
         return {
@@ -40,12 +43,15 @@ public:
                 {0, 4, VK_FORMAT_R32G32B32A32_SFLOAT, static_cast<uint32_t >(offsetof(SkinVertex,
                                                                                       jointWeights)), sizeof(glm::vec4), OTHER},
 
-                {0, 5, VK_FORMAT_R32G32B32A32_SFLOAT, static_cast<uint32_t >(offsetof(SkinVertex,
-                                                                                      inColor)),      sizeof(glm::vec3), COLOR}
+                {0, 5, VK_FORMAT_R32G32B32_SFLOAT, static_cast<uint32_t >(offsetof(SkinVertex,
+                                                                                      inColor)),      sizeof(glm::vec3), COLOR},
+            {0, 6, VK_FORMAT_R32G32B32A32_SFLOAT, static_cast<uint32_t >(offsetof(SkinVertex,
+                                                                                      tangent)),      sizeof(glm::vec4), TANGENT}
 
         };
     }
 };
+
 
 struct SkinMvpObject {
     alignas(16) glm::mat4 model;
@@ -78,14 +84,20 @@ public:
 
     }
 
+    void setLight(Light *lightObject) {
+        lubo = lightObject->getUBO();
+        GDSL = lightObject->getDSL();
+        GDS = lightObject->getDS();
+        this->lightObject = lightObject;
+    }
+
     static PoolSizes getPoolSizes() {
         PoolSizes DPSZs = {};
         DPSZs.uniformBlocksInPool = 2;
-        DPSZs.texturesInPool = 1;
+        DPSZs.texturesInPool = 4;
         DPSZs.setsInPool = 2;
         return DPSZs;
     }
-
 
     void init(BaseProject *bp, Camera *_camera) {
         BP = bp;
@@ -95,8 +107,20 @@ public:
                 {Mvp_BINDING,               VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(SkinMvpObject),               1},
                 {InverseBindMatrix_BINDING, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(SkinInverseBindMatrixObject), 1},
                 {Base_Texture_Binding,      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                   1},
+                // {Metalic_Texture_Binding,      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                   1},
+                // {Roughness_Texture_Binding,      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                   1},
+                // {Diffuse_Texture_Binding,      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                   1},
         });
-        BaseTexture.init(bp, baseTexturePath);
+        BaseTexture.init(bp, baseTexturePath, baseTextureFormat, baseTextureInitSampler);
+        if(!metalicTexturePath.empty()){
+            MetalicTexture.init(bp, metalicTexturePath, metalicTextureFormat, metalicTextureInitSampler);
+        }
+        if(!roughnessTexturePath.empty()){
+            RoughnessTexture.init(bp, roughnessTexturePath, roughnessTextureFormat, roughnessTextureInitSampler);
+        }
+        if(!diffuseTexturePath.empty()){
+            DiffuseTexture.init(bp, diffuseTexturePath, diffuseTextureFormat, diffuseTextureInitSampler);
+        }
 
         P.init(bp, &VD, VERT_SHADER, FRAG_SHADER, {&DSL});
         P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
@@ -111,11 +135,14 @@ public:
     void createPipelineAndDescriptorSets() {
         P.create();
         DS.init(BP, &DSL, {&BaseTexture});
+        // DS.init(BP, &DSL, {&BaseTexture, &MetalicTexture, &RoughnessTexture, &DiffuseTexture});
+        // GDS.init(BP, &GDSL, {});
     }
 
     void bind(VkCommandBuffer commandBuffer, int currentImage) {
         P.bind(commandBuffer);
         DS.bind(commandBuffer, P, InverseBinding_Mvp_SET, currentImage);
+        // GDS.bind(commandBuffer, P, LIGHT_SET, currentImage);
 
         //vertex and index buffers
 
@@ -215,6 +242,24 @@ public:
         baseTexturePath = filePath;
         baseTextureFormat = Fmt;
         baseTextureInitSampler = initSampler;
+    }
+
+    void setMetalicTexture(std::string filePath, VkFormat Fmt, bool initSampler = false) {
+        metalicTexturePath = filePath;
+        metalicTextureFormat = Fmt;
+        metalicTextureInitSampler = initSampler;
+    }
+
+    void setRoughnessTexture(std::string filePath, VkFormat Fmt, bool initSampler = false) {
+        roughnessTexturePath = filePath;
+        roughnessTextureFormat = Fmt;
+        roughnessTextureInitSampler = initSampler;
+    }
+
+    void setDiffuseTexture(std::string filePath, VkFormat Fmt, bool initSampler = false) {
+        diffuseTexturePath = filePath;
+        diffuseTextureFormat = Fmt;
+        diffuseTextureInitSampler = initSampler;
     }
 
     void setCameraFollow(bool cameraFollow) {
@@ -400,6 +445,9 @@ public:
 protected:
 
 
+    LightUnifromBufferObject lubo{};
+    DescriptorSetLayout GDSL;
+    DescriptorSet GDS;
 
     glm::mat4 worldMatrix = glm::mat4(1.0f);
     glm::vec3 translation = glm::vec3(0.0f);
@@ -423,11 +471,26 @@ protected:
     bool baseTextureInitSampler;
     std::string baseTexturePath;
 
+    VkFormat metalicTextureFormat;
+    bool metalicTextureInitSampler;
+    std::string metalicTexturePath;
+
+    VkFormat roughnessTextureFormat;
+    bool roughnessTextureInitSampler;
+    std::string roughnessTexturePath;
+
+    VkFormat diffuseTextureFormat;
+    bool diffuseTextureInitSampler;
+    std::string diffuseTexturePath;
+
 
     DescriptorSetLayout DSL;
     DescriptorSet DS;
 
     Texture BaseTexture;
+    Texture MetalicTexture{};
+    Texture RoughnessTexture{};
+    Texture DiffuseTexture{};
 
     DescriptorSetLayout InverseBindMatrixDSL;
     DescriptorSet InverseBindMatrixDS;
@@ -444,13 +507,18 @@ protected:
 
     BaseProject *BP;
     Camera *camera;
+    Light *lightObject;
 
     const std::string VERT_SHADER = "assets/shaders/bin/skinning.vert.spv";
     const std::string FRAG_SHADER = "assets/shaders/bin/skinning.frag.spv";
     const uint32_t InverseBinding_Mvp_SET = 0;
+    const uint32_t LIGHT_SET = 1;
     const uint32_t Mvp_BINDING = 0;
     const uint32_t InverseBindMatrix_BINDING = 1;
     const uint32_t Base_Texture_Binding = 2;
+    const uint32_t Metalic_Texture_Binding = 3;
+    const uint32_t Roughness_Texture_Binding = 4;
+    const uint32_t Diffuse_Texture_Binding = 5;
 
 
     void mapInverseBindMatrices(uint32_t currentImage) {
@@ -510,8 +578,9 @@ protected:
             mvpObject.jointTransformMatrices[index] = matrix;
         }
 
-
         DS.map(currentImage, &mvpObject, Mvp_BINDING);
+        // auto lubo = lightObject->getUBO();
+        // GDS.map(currentImage, &lubo, 0);
     }
 
 

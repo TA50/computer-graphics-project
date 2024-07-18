@@ -6,6 +6,7 @@
 #include "headers/json.hpp"
 #include <iostream>
 #include <fstream>
+#include <light-object.hpp>
 #include <string>
 #include "animated-model/skin.hpp"
 
@@ -48,8 +49,7 @@ public:
         }
     }
 
-
-    std::unordered_map<std::string, GameObject *> loadGameObjects() {
+    std::unordered_map<std::string, GameObject *> loadGameObjects(Light *lightObject) {
         if (jsonData.contains("gameObjects")) {
             nlohmann::json gameObjectsData = jsonData["gameObjects"];
             std::unordered_map<std::string, GameObject *> gameObjectsMap;
@@ -59,6 +59,18 @@ public:
                 nlohmann::json gameObjectData = it.value();
                 std::string modelPath = gameObjectData["modelPath"];
                 std::string baseTexture = gameObjectData["baseTexture"];
+                std::string metalicTexture;
+                if(gameObjectData["metalicTexture"].is_string()){
+                    metalicTexture = static_cast<std::string>(gameObjectData["metallicTexture"]);
+                }
+                std::string diffuseTexture;
+                if(gameObjectData["diffuseTexture"].is_string()){
+                    diffuseTexture = static_cast<std::string>(gameObjectData["diffuseTexture"]);
+                }
+                std::string roughnessTexture;
+                if(gameObjectData["roughnessTexture"].is_string()){
+                    roughnessTexture = static_cast<std::string>(gameObjectData["roughnessTexture"]);
+                }
                 std::string modelType = gameObjectData["modelType"];
                 GameObjectLoader::GameObjectLoaderResult result{};
                 if (modelType == "gltf") {
@@ -72,22 +84,36 @@ public:
                 gameObject->setBaseTexture(baseTexture,
                                            VK_FORMAT_R8G8B8A8_UNORM,
                                            true);
+                if(!metalicTexture.empty()) {
+                    gameObject->setMetalicTexture(metalicTexture, VK_FORMAT_R8G8B8A8_UNORM, true);
+                }
+                if(!diffuseTexture.empty()) {
+                    gameObject->setDiffuseTexture(diffuseTexture, VK_FORMAT_R8G8B8A8_UNORM, true);
+                }
+                if(!roughnessTexture.empty()) {
+                    gameObject->setRoughnessTexture(roughnessTexture, VK_FORMAT_R8G8B8A8_UNORM, true);
+                }
                 bool cull = gameObjectData["cull"];
+
                 if (!cull) {
                     gameObject->setCullMode(VK_CULL_MODE_NONE);
                 }
                 gameObject->setVertices(result.vertices);
                 gameObject->setIndices(result.indices);
+                gameObject->setLight(lightObject);
                 gameObjectsMap[gameObject->getId()] = gameObject;
+
             }
             return gameObjectsMap;
         } else {
             std::cerr << "No game objects found in json" << std::endl;
             throw std::runtime_error("No game objects found in json");
+
         }
     }
 
-    std::unordered_map<std::string, Skin *> loadSkins() {
+
+    std::unordered_map<std::string, Skin *> loadSkins(Light *lightObject) {
         if (jsonData.contains("skins")) {
             nlohmann::json skinsData = jsonData["skins"];
             std::unordered_map<std::string, Skin *> skinsMap;
@@ -98,6 +124,18 @@ public:
                 std::string name = skinData["name"];
                 std::string modelPath = skinData["modelPath"];
                 std::string baseTexture = skinData["baseTexture"];
+                std::string metalicTexture;
+                if(skinData["metallicTexture"].is_string()){
+                    metalicTexture = static_cast<std::string>(skinData["metallicTexture"]);
+                }
+                std::string diffuseTexture;
+                if(skinData["diffuseTexture"].is_string()){
+                    diffuseTexture = static_cast<std::string>(skinData["diffuseTexture"]);
+                }
+                std::string roughnessTexture;
+                if(skinData["roughnessTexture"].is_string()){
+                    roughnessTexture = static_cast<std::string>(skinData["roughnessTexture"]);
+                }
                 Skin *skin;
                 tinygltf::Model model = GltfLoader::loadGlTFFile(modelPath);
                 std::vector<Skin *> skins{};
@@ -113,6 +151,15 @@ public:
                 skin->setBaseTexture(baseTexture,
                                      VK_FORMAT_R8G8B8A8_UNORM,
                                      true);
+                if(!metalicTexture.empty()) {
+                    skin->setMetalicTexture(metalicTexture, VK_FORMAT_R8G8B8A8_UNORM, true);
+                }
+                if(!diffuseTexture.empty()) {
+                    skin->setDiffuseTexture(diffuseTexture, VK_FORMAT_R8G8B8A8_UNORM, true);
+                }
+                if(!roughnessTexture.empty()) {
+                    skin->setRoughnessTexture(roughnessTexture, VK_FORMAT_R8G8B8A8_UNORM, true);
+                }
                 GltfLoader::loadAnimations(skin, model);
                 std::cout << "Loaded animations" << std::endl;
                 bool cameraFollow = skinData["cameraFollow"];
@@ -121,7 +168,7 @@ public:
                 } else {
                     skin->setCameraFollow(false);
                 }
-
+                skin->setLight(lightObject);
                 skinsMap[skinId] = skin;
 
             }
@@ -132,8 +179,8 @@ public:
         }
     }
 
-    glm::vec3 get(const std::string &key, ObjectType objectType, Transform transformType) {
 
+    glm::vec3 get(const std::string &key, ObjectType objectType, Transform transformType) {
         std::string transformTypeStr;
         std::string objectTypeStr;
         switch (transformType) {
@@ -169,6 +216,7 @@ public:
         }
     }
 
+
     void setCamera(Camera *camera, float aspectRatio) {
         auto key = "camera";
         float yaw = jsonData[key]["euler"]["yaw"]; // z
@@ -198,7 +246,21 @@ public:
         config->villainSpeed = jsonData[key]["villainSpeed"];
         config->heroAnimationSpeed = jsonData[key]["heroAnimationSpeed"];
         config->villainAnimationSpeed = jsonData[key]["villainAnimationSpeed"];
+    }
 
+
+    void setLight(LightConfig *config) {
+        auto key = "light";
+        config->ang1 = jsonData[key]["ang1"];
+        config->ang2 = jsonData[key]["ang2"];
+        config->ang3 = jsonData[key]["ang3"];
+        config->r = jsonData[key]["color"]["r"];
+        config->g = jsonData[key]["color"]["g"];
+        config->b = jsonData[key]["color"]["b"];
+        config->a = jsonData[key]["color"]["a"];
+        config->x = jsonData[key]["position"]["x"];
+        config->y = jsonData[key]["position"]["y"];
+        config->z = jsonData[key]["position"]["z"];
     }
 
 private :

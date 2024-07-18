@@ -8,10 +8,10 @@ struct LightUnifromBufferObject {
 
     static std::vector<DescriptorSetLayoutBinding> getDescriptorSetLayoutBindings() {
         return {
-                {
-                    0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS,
-                    sizeof(LightUnifromBufferObject), 1
-                }
+            {
+                0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT,
+                sizeof(LightUnifromBufferObject), 1
+            },
         };
     }
 };
@@ -25,6 +25,8 @@ public:
         DSL.init(bp, LightUnifromBufferObject::getDescriptorSetLayoutBindings());
     }
 
+
+
     void setUBO(glm::vec3 lightDir, glm::vec4 lightColor, glm::vec3 eyePos, glm::vec3 cameraPos) {
         lubo.lightDir = lightDir;
         lubo.lightColor = lightColor;
@@ -32,7 +34,7 @@ public:
         lubo.cameraPos = cameraPos;
     }
 
-   LightUnifromBufferObject getUBO() {
+    LightUnifromBufferObject getUBO() {
         return lubo;
     }
 
@@ -52,8 +54,9 @@ public:
         return poolSizes;
     }
 
+
 private:
-    LightUnifromBufferObject lubo {};
+    LightUnifromBufferObject lubo{};
     DescriptorSetLayout DSL;
     DescriptorSet DS;
 };

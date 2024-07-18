@@ -82,16 +82,16 @@ public:
                 }
                 gameObject->setName(gameObjectData["name"]);
                 gameObject->setBaseTexture(baseTexture,
-                                           VK_FORMAT_R8G8B8A8_UNORM,
+                                           VK_FORMAT_R8G8B8A8_SRGB,
                                            true);
                 if(!metalicTexture.empty()) {
-                    gameObject->setMetalicTexture(metalicTexture, VK_FORMAT_R8G8B8A8_UNORM, true);
+                    gameObject->setMetalicTexture(metalicTexture, VK_FORMAT_R8G8B8A8_SRGB, true);
                 }
                 if(!diffuseTexture.empty()) {
                     gameObject->setDiffuseTexture(diffuseTexture, VK_FORMAT_R8G8B8A8_UNORM, true);
                 }
                 if(!roughnessTexture.empty()) {
-                    gameObject->setRoughnessTexture(roughnessTexture, VK_FORMAT_R8G8B8A8_UNORM, true);
+                    gameObject->setRoughnessTexture(roughnessTexture, VK_FORMAT_R8G8B8A8_SRGB, true);
                 }
                 bool cull = gameObjectData["cull"];
 
@@ -111,7 +111,6 @@ public:
 
         }
     }
-
 
     std::unordered_map<std::string, Skin *> loadSkins(Light *lightObject) {
         if (jsonData.contains("skins")) {
@@ -149,17 +148,18 @@ public:
                 skin->setName(name);
                 skin->setId(skinId);
                 skin->setBaseTexture(baseTexture,
-                                     VK_FORMAT_R8G8B8A8_UNORM,
+                                     VK_FORMAT_R8G8B8A8_SRGB,
                                      true);
                 if(!metalicTexture.empty()) {
-                    skin->setMetalicTexture(metalicTexture, VK_FORMAT_R8G8B8A8_UNORM, true);
+                    skin->setMetalicTexture(metalicTexture, VK_FORMAT_R8G8B8A8_SRGB, true);
                 }
                 if(!diffuseTexture.empty()) {
                     skin->setDiffuseTexture(diffuseTexture, VK_FORMAT_R8G8B8A8_UNORM, true);
                 }
                 if(!roughnessTexture.empty()) {
-                    skin->setRoughnessTexture(roughnessTexture, VK_FORMAT_R8G8B8A8_UNORM, true);
+                    skin->setRoughnessTexture(roughnessTexture, VK_FORMAT_R8G8B8A8_SRGB, true);
                 }
+
                 GltfLoader::loadAnimations(skin, model);
                 std::cout << "Loaded animations" << std::endl;
                 bool cameraFollow = skinData["cameraFollow"];

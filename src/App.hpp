@@ -35,6 +35,7 @@ protected:
 
     Light lightObject = Light();
 
+
     // Here you set the main application parameters
     void setWindowParameters() override {
         windowWidth = 800;
@@ -43,10 +44,10 @@ protected:
         windowResizable = GLFW_TRUE;
         initialBackgroundColor = {0.001f, 0.001f, 0.001f, 1.0f};
 
+
         Ar = (float) windowWidth / (float) windowHeight;
 
     }
-
     // What to do when the window changes size
     void onWindowResize(int w, int h) override {
         std::cout << "Window resized to: " << w << " x " << h << "\n";
@@ -57,6 +58,7 @@ protected:
 
 
     void loadModels(Light *lightObject) {
+
         gameObjects = worldLoader.loadGameObjects(lightObject);
         std::cout << "Game Objects loaded" << std::endl;
         skins = worldLoader.loadSkins(lightObject);

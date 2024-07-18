@@ -106,10 +106,10 @@ public:
         DSL.init(bp, {
                 {Mvp_BINDING,               VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(SkinMvpObject),               1},
                 {InverseBindMatrix_BINDING, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(SkinInverseBindMatrixObject), 1},
-                {Base_Texture_Binding,      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                   1},
-                // {Metalic_Texture_Binding,      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                   1},
-                // {Roughness_Texture_Binding,      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                   1},
-                // {Diffuse_Texture_Binding,      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                   1},
+                {Base_Texture_Binding,      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_ALL_GRAPHICS, 0,                                   1},
+                {Metalic_Texture_Binding,      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_ALL_GRAPHICS, 1,                                   1},
+                {Roughness_Texture_Binding,      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_ALL_GRAPHICS, 2,                                   1},
+                {Diffuse_Texture_Binding,      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_ALL_GRAPHICS, 3,                                   1},
         });
         BaseTexture.init(bp, baseTexturePath, baseTextureFormat, baseTextureInitSampler);
         if(!metalicTexturePath.empty()){
@@ -122,7 +122,7 @@ public:
             DiffuseTexture.init(bp, diffuseTexturePath, diffuseTextureFormat, diffuseTextureInitSampler);
         }
 
-        P.init(bp, &VD, VERT_SHADER, FRAG_SHADER, {&DSL});
+        P.init(bp, &VD, VERT_SHADER, FRAG_SHADER, {&DSL, &GDSL});
         P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
                               VK_CULL_MODE_NONE, false);
         createVertexBuffer();
@@ -134,15 +134,15 @@ public:
 
     void createPipelineAndDescriptorSets() {
         P.create();
-        DS.init(BP, &DSL, {&BaseTexture});
-        // DS.init(BP, &DSL, {&BaseTexture, &MetalicTexture, &RoughnessTexture, &DiffuseTexture});
-        // GDS.init(BP, &GDSL, {});
+        // DS.init(BP, &DSL, {&BaseTexture});
+        DS.init(BP, &DSL, {&BaseTexture, &MetalicTexture, &RoughnessTexture, &DiffuseTexture});
+        GDS.init(BP, &GDSL, {});
     }
 
     void bind(VkCommandBuffer commandBuffer, int currentImage) {
         P.bind(commandBuffer);
         DS.bind(commandBuffer, P, InverseBinding_Mvp_SET, currentImage);
-        // GDS.bind(commandBuffer, P, LIGHT_SET, currentImage);
+        GDS.bind(commandBuffer, P, LIGHT_SET, currentImage);
 
         //vertex and index buffers
 
@@ -191,6 +191,7 @@ public:
 
 
     void pipelinesAndDescriptorSetsCleanup() {
+        GDS.cleanup();
         DS.cleanup();
         P.cleanup();
     }
@@ -199,7 +200,7 @@ public:
         P.destroy();
         VD.cleanup();
         DSL.cleanup();
-        BaseTexture.cleanup();
+        GDSL.cleanup();
 
         vkDestroyBuffer(BP->device, vertexBuffer, nullptr);
         vkFreeMemory(BP->device, vertexBufferMemory, nullptr);
@@ -238,25 +239,25 @@ public:
         this->id = pId;
     }
 
-    void setBaseTexture(std::string filePath, VkFormat Fmt, bool initSampler = false) {
+    void setBaseTexture(std::string filePath, VkFormat Fmt, bool initSampler = true) {
         baseTexturePath = filePath;
         baseTextureFormat = Fmt;
         baseTextureInitSampler = initSampler;
     }
 
-    void setMetalicTexture(std::string filePath, VkFormat Fmt, bool initSampler = false) {
+    void setMetalicTexture(std::string filePath, VkFormat Fmt, bool initSampler = true) {
         metalicTexturePath = filePath;
         metalicTextureFormat = Fmt;
         metalicTextureInitSampler = initSampler;
     }
 
-    void setRoughnessTexture(std::string filePath, VkFormat Fmt, bool initSampler = false) {
+    void setRoughnessTexture(std::string filePath, VkFormat Fmt, bool initSampler = true) {
         roughnessTexturePath = filePath;
         roughnessTextureFormat = Fmt;
         roughnessTextureInitSampler = initSampler;
     }
 
-    void setDiffuseTexture(std::string filePath, VkFormat Fmt, bool initSampler = false) {
+    void setDiffuseTexture(std::string filePath, VkFormat Fmt, bool initSampler = true) {
         diffuseTexturePath = filePath;
         diffuseTextureFormat = Fmt;
         diffuseTextureInitSampler = initSampler;
@@ -344,7 +345,6 @@ public:
 
 
     glm::mat4 getModelMatrix() {
-
         auto M = getTransformedWorldMatrix();
         return rootJoint->getGlobalMatrix() * M;
     }
@@ -579,8 +579,8 @@ protected:
         }
 
         DS.map(currentImage, &mvpObject, Mvp_BINDING);
-        // auto lubo = lightObject->getUBO();
-        // GDS.map(currentImage, &lubo, 0);
+        auto lubo = lightObject->getUBO();
+        GDS.map(currentImage, &lubo, 0);
     }
 
 

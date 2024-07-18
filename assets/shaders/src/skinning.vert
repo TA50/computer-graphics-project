@@ -53,7 +53,7 @@ void main2() {
     vec3 lPos = mat3(ubo.view) * vec3(0.5, 0.5, 0.5);
     outLightVec = lPos - pos.xyz;
     outViewVec = -pos.xyz;
-    fragTan = vec4((vec4(1.0) * vec4(inTan.xyz, 0.0)).xyz, inTan.w);
+    fragTan = vec4((mat4(1) * vec4(inTan.xyz, 0.0)).xyz, inTan.w);
     fragPos = vec3(ubo.model * vec4(inPosition, 1.0));
 }
 void main() {
@@ -71,6 +71,8 @@ void main() {
     vec3 lPos = mat3(ubo.view) * ubo.lightPos.xyz;
     outLightVec = lPos - pos.xyz;
     outViewVec = -pos.xyz;
+    fragTan = vec4((mat4(1) * vec4(inTan.xyz, 0.0)).xyz, inTan.w);
+    fragPos = vec3(ubo.model * vec4(inPosition, 1.0));
 
 }
 

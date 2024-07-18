@@ -109,7 +109,6 @@ public:
 
         for (size_t i = 0; i < posAccessor.count; ++i) {
             SkinVertex vertex{};
-
             vertex.pos = glm::vec3(posData[i * 3], posData[i * 3 + 1], posData[i * 3 + 2]);
             vertex.normal = glm::vec3(normalData[i * 3], normalData[i * 3 + 1], normalData[i * 3 + 2]);
             vertex.uv = glm::vec2(uvData[i * 2], uvData[i * 2 + 1]);

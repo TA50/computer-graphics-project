@@ -126,24 +126,24 @@ public:
         this->camera = pCamera;
         this->BP = bp;
         DSL.init(bp, {
-                {MVP_BINDING,          VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS,
-                                                                                                                sizeof(GameObjectUniformBufferObject), 1},
-                {BASE_TEXTURE_BINDING, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                     1},
-                {METALIC_TEXTURE_BINDING, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                     1},
+                {MVP_BINDING,               VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS,
+                                                                                                                     sizeof(GameObjectUniformBufferObject), 1},
+                {BASE_TEXTURE_BINDING,      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                     1},
+                {METALIC_TEXTURE_BINDING,   VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                     1},
                 {ROUGHNESS_TEXTURE_BINDING, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                     1},
-                {DIFFUSE_TEXTURE_BINDING, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                     1},
+                {DIFFUSE_TEXTURE_BINDING,   VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                     1},
         });
         VD.init(bp, GameObjectVertex::getBindingDescription(),
                 GameObjectVertex::getDescriptorElements());
 
         BaseTexture.init(BP, baseTexturePath, baseTextureFormat, baseTextureInitSampler);
-        if(!metalicTexturePath.empty()) {
+        if (!metalicTexturePath.empty()) {
             MetalicTexture.init(BP, metalicTexturePath, metalicTextureFormat, metalicTextureInitSampler);
         }
-        if(!diffuseTexturePath.empty()) {
+        if (!diffuseTexturePath.empty()) {
             DiffuseTexture.init(BP, diffuseTexturePath, diffuseTextureFormat, diffuseTextureInitSampler);
         }
-        if(!roughnessTexturePath.empty()) {
+        if (!roughnessTexturePath.empty()) {
             RoughnessTexture.init(BP, roughnessTexturePath, roughnessTextureFormat, roughnessTextureInitSampler);
         }
 
@@ -227,7 +227,6 @@ public:
     }
 
 
-
     void setTranslation(glm::vec3 pos) {
         translation = pos;
     }
@@ -292,7 +291,7 @@ public:
         // translate
         model = glm::translate(model, translation);
 
-        return model * OriginMatrix;
+        return model;
     }
 
     std::string getName() {
@@ -336,11 +335,17 @@ public:
         OriginMatrix = translateToNewCenterMatrix;
     }
 
+    VkFormat baseTextureFormat;
+    bool baseTextureInitSampler;
+    std::string baseTexturePath;
+
+    std::vector<GameObjectVertex> vertices;
+    std::vector<uint32_t> indices;
 private:
     std::string name;
     std::string id;
     Camera *camera{};
-    Light * lightObject;
+    Light *lightObject;
     BaseProject *BP{};
     glm::mat4 LocalMatrix = glm::mat4(1.0f);
     glm::mat4 OriginMatrix = glm::mat4(1.0f);
@@ -365,9 +370,6 @@ private:
     Texture RoughnessTexture{};
     Texture DiffuseTexture{};
 
-    VkFormat baseTextureFormat;
-    bool baseTextureInitSampler;
-    std::string baseTexturePath;
 
     VkFormat metalicTextureFormat;
     bool metalicTextureInitSampler;
@@ -385,11 +387,9 @@ private:
     std::string modelPath;
     ModelType modelType;
 
-    std::vector<GameObjectVertex> vertices;
     glm::mat4 Wm = glm::mat4(1.0f);
     std::vector<unsigned char> loadedModelVertices{};
     bool loaded = false;
-    std::vector<uint32_t> indices;
 
 
     VkBuffer vertexBuffer{};

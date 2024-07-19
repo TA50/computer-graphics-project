@@ -1,7 +1,7 @@
-#include "App.hpp"
+#include "render-systems-app.hpp"
 
 int main() {
-    App app;
+    RenderSystemsApp app;
     try {
         app.run();
     }

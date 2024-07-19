@@ -21,3 +21,31 @@ private:
 
 };
 
+
+struct ObjectData {
+    alignas(16) glm::mat4 model;
+};
+
+
+struct BaseVertex {
+    glm::vec3 pos;
+
+
+    virtual uint32_t getVertexSize() {
+        return sizeof(BaseVertex);
+    }
+
+    virtual std::vector<VertexDescriptorElement> getDescriptorElements() {
+        return {
+                {0, 0, VK_FORMAT_R32G32B32_SFLOAT, static_cast<uint32_t >(offsetof(BaseVertex, pos))},
+        };
+
+    }
+
+    std::vector<VertexBindingDescriptorElement> getBindingDescription() {
+        return {
+                {0, this->getVertexSize(), VK_VERTEX_INPUT_RATE_VERTEX},
+        };
+    }
+};
+

@@ -38,7 +38,7 @@
       "z": 0
     },
     "perspective": {
-      "fov": 20,
+      "fov": 50,
       "near": 0.1,
       "far": 500
     },
@@ -98,19 +98,19 @@
       "baseTexture": "assets/models/cola-can/textures/Material_001_baseColor.png",
       "cull": true,
       "scale": {
-        "x": 0,
-        "y": 0,
-        "z": 0
+        "x": 10,
+        "y": 10,
+        "z": 10
       },
       "translate": {
-        "x": 0.1,
+        "x": 0,
         "y": 0,
         "z": 0
       },
       "rotate": {
         "x": 0,
         "y": 90,
-        "z": 90
+        "z": 0
       }
     }
   },

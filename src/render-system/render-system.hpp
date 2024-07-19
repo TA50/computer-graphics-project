@@ -69,7 +69,7 @@ public:
 
 protected:
 
-    std::vector<DescriptorSetLayoutBinding> initGDSL() {
+    std::vector<DescriptorSetLayoutBinding> getGDSLBindings() {
         return {
                 {CAMERA_DATA_BINDING, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS,
                         sizeof(CameraUniformBuffer),      1},

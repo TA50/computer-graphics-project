@@ -103,7 +103,7 @@ protected:
 
     void localInit() override {
         VD.init(BP, StationarySystemVertex::getBindingDescription(), StationarySystemVertex::getDescriptorElements());
-        initGDSL();
+        GDSL.init(BP, getGDSLBindings());
 
         DSL.init(BP, {
                 {MODEL_DATA_BINDING,   VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS,

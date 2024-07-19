@@ -1,0 +1,122 @@
+{
+  "game": {
+    "heroSpeed": 50,
+    "villainSpeed": 0.5,
+    "villainAnimationSpeed": 3,
+    "heroAnimationSpeed": 2
+  },
+  "light": {
+    "ang1": 135.0,
+    "ang2": 45.0,
+    "ang3": 0.0,
+    "color": {
+      "r": 2,
+      "g": 2,
+      "b": 2,
+      "a": 1
+    },
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    }
+  },
+  "camera": {
+    "euler": {
+      "yaw": 180,
+      "pitch": 33,
+      "roll": 0
+    },
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "targetDelta": {
+      "x": 0,
+      "y": 2,
+      "z": 0
+    },
+    "perspective": {
+      "fov": 50,
+      "near": 0.1,
+      "far": 500
+    },
+    "distance": 10
+  },
+  "gameObjects": {
+    "cola-can": {
+      "renderType": "stationary",
+      "name": "Cola Can",
+      "modelPath": "assets/models/cola-can/cola.gltf",
+      "modelType": "gltf",
+      "textures": {
+          "base": {
+            "path": "assets/models/cola-can/textures/Material_001_baseColor.png"
+          }
+      },
+      "cull": true,
+      "scale": {
+        "x": 10,
+        "y": 10,
+        "z": 10
+      },
+      "translate": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotate": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      }
+    }
+  },
+  "skins": {
+    "luna": {
+      "name": "Luna",
+      "modelPath": "assets/models/lynx_-_stars_-_animated/scene.gltf",
+      "baseTexture": "assets/models/lynx_-_stars_-_animated/textures/stars_baseColor.png",
+      "cameraFollow": false,
+      "scale": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "translate": {
+        "x": 0,
+        "y": 5,
+        "z": 2
+      },
+      "rotate": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "pepsiman": {
+      "name": "Pepsi man",
+      "modelPath": "assets/models/pepsiman/scene.gltf",
+      "baseTexture": "assets/models/pepsiman/textures/Pepsiman_baseColor.png",
+      "metallicTexture": "assets/models/pepsiman/textures/Pepsiman_metallicRoughness.png",
+      "roughnessTexture": "assets/models/pepsiman/textures/Pepsiman_metallicRoughness.png",
+      "cameraFollow": true,
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "translate": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotate": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    }
+  }
+}

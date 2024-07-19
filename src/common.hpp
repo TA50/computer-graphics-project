@@ -52,6 +52,10 @@ struct BaseVertex {
 
 
 
+
+
+
+
 struct TextureInfo {
     std::string path;
     bool initSampler = true;
@@ -65,3 +69,5 @@ enum RenderType {
     SKYBOX,
     PEPSIMAN,
 };
+
+

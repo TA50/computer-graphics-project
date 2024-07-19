@@ -3,6 +3,8 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "headers/json.hpp"
+#include "common.hpp"
+#include "enums.hpp"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -10,23 +12,14 @@
 #include "game-objects/game-object-base.hpp"
 #include "game-objects/game-object-loader.hpp"
 
-enum Transform {
-    SCALE,
-    ROTATE,
-    TRANSLATE
-};
-
-enum ObjectType {
-    GAME_OBJECT,
-    SKIN
-};
 
 class SceneLoader {
 public:
-    std::unordered_map < std::string, RenderType > renderTypes = {
+    std::unordered_map<std::string, RenderType> renderTypes = {
             {"stationary", STATIONARY},
             {"moving",     MOVING}
     };
+
     SceneLoader(std::string path) : filename(path) {
         jsonData = nlohmann::json();
     }
@@ -54,7 +47,7 @@ public:
     }
 
 
-    std::unordered_map<std::string, GameObjectBase *> loadGameObjects(Light *lightObject) {
+    std::unordered_map<std::string, GameObjectBase *> loadGameObjects() {
         if (jsonData.contains("gameObjects")) {
             nlohmann::json gameObjectsData = jsonData["gameObjects"];
             std::unordered_map<std::string, GameObjectBase *> gameObjectsMap;
@@ -93,6 +86,7 @@ public:
             }
 
             textures[key] = textureInfo;
+            gameObject->addTexture(key, textureInfo);
         }
 
         return textures;
@@ -103,6 +97,7 @@ public:
         std::string modelPath = gameObjectData["modelPath"];
         auto textures = gameObjectData["textures"];
         std::string modelType = gameObjectData["modelType"];
+        std::string renderType = gameObjectData["renderType"];
         auto textureInfo = loadTextures(gameObject, textures);
         for (auto &t: textureInfo) {
             gameObject->addTexture(t.first, t.second);
@@ -118,9 +113,7 @@ public:
 
         gameObject->setVertices(result.vertices);
         gameObject->setIndices(result.indices);
-
-        auto renderType = renderTypes[key];
-        gameObject->setRenderType(renderType);
+        gameObject->setRenderType(renderTypes[renderType]);
         return gameObject;
     }
 

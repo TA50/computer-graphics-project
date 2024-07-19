@@ -104,6 +104,7 @@ protected:
     void localInit() {
         worldLoader.readMatrixJson();
 
+        std::cout << "Light initialized" << std::endl;
         setLightConfig();
         lightObject.init(this);
         auto lightDir = glm::vec3(cos(glm::radians(lightConfig.ang1)) * cos(glm::radians(lightConfig.ang2)), sin(glm::radians(lightConfig.ang1)),
@@ -112,7 +113,6 @@ protected:
         auto eyePos = glm::vec3(glm::inverse(camera.matrices.view) * glm::vec4(0, 0, 0, 1));
 
         lightObject.setUBO(lightDir, lightColor, eyePos, camera.CamPosition);
-        std::cout << "Light initialized" << std::endl;
 
         loadModels(&lightObject);
         setCamera();

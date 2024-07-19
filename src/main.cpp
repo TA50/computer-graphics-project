@@ -1,7 +1,6 @@
-#include "render-systems-app.hpp"
-
+#include "scene-test-app.hpp"
 int main() {
-    RenderSystemsApp app;
+    SceneTestApp app;
     try {
         app.run();
     }

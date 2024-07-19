@@ -7,12 +7,6 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
-struct GameObjectVertex {
-    glm::vec3 pos;
-    glm::vec3 normal;
-    glm::vec2 uv;
-    glm::vec4 inColor = glm::vec4(1.0f);
-};
 
 
 class GameObjectBase {

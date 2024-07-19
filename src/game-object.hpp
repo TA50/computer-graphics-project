@@ -10,40 +10,6 @@
 #include "glm/gtc/matrix_transform.hpp"
 
 
-struct GameObjectVertex {
-    glm::vec3 pos;
-    glm::vec3 normal;
-    glm::vec2 uv;
-    glm::vec4 inColor = glm::vec4(1.0f);
-
-    void setColor(glm::vec4 color) {
-        inColor = color;
-    }
-
-    static std::vector<VertexBindingDescriptorElement> getBindingDescription() {
-        return {
-                {0, sizeof(GameObjectVertex), VK_VERTEX_INPUT_RATE_VERTEX},
-        };
-    }
-
-    static std::vector<VertexDescriptorElement> getDescriptorElements() {
-        return {
-                {0, 0, VK_FORMAT_R32G32B32_SFLOAT,    static_cast<uint32_t >(offsetof(GameObjectVertex,
-                                                                                      pos)),     sizeof(glm::vec3), POSITION},
-                {0, 1, VK_FORMAT_R32G32B32_SFLOAT,    static_cast<uint32_t >(offsetof(GameObjectVertex,
-                                                                                      normal)),  sizeof(glm::vec3), NORMAL},
-                {0, 2, VK_FORMAT_R32G32_SFLOAT,       static_cast<uint32_t >(offsetof(GameObjectVertex,
-                                                                                      uv)),      sizeof(glm::vec2), UV},
-                {0, 3, VK_FORMAT_R32G32B32A32_SFLOAT, static_cast<uint32_t >(offsetof(GameObjectVertex,
-                                                                                      inColor)), sizeof(glm::vec4), COLOR}
-        };
-    }
-};
-
-struct GameObjectUniformBufferObject : BaseUniformBufferObject {
-    GameObjectUniformBufferObject(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
-            : BaseUniformBufferObject(model, view, projection) {}
-};
 
 
 class GameObject {

@@ -9,18 +9,7 @@
 #include <light-object.hpp>
 #include <string>
 #include "animated-model/skin.hpp"
-
-enum Transform {
-    SCALE,
-    ROTATE,
-    TRANSLATE
-};
-
-enum ObjectType {
-    GAME_OBJECT,
-    SKIN
-};
-
+#include "enums.hpp"
 class WorldLoader {
 public:
     WorldLoader(std::string path) : filename(path) {

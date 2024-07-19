@@ -4,18 +4,22 @@
 #include <render-system/render-system.hpp>
 #include "game-objects/game-object-base.hpp"
 #include "modules/Starter.hpp"
+#include "camera.hpp"
+#include "scene/scene-loader.hpp"
 
 class SceneBase {
 public:
+
     std::unordered_map<std::string, GameObjectBase *> gameObjects;
     Camera camera;
     Light lightObject = Light();
-    WorldLoader worldLoader;
+    SceneLoader sceneLoader;
     std::string id;
 
-    SceneBase(std::string pId, std::string worldFile) {
-        id = pId;
-        worldLoader = WorldLoader(worldFile);
+    SceneBase(std::string pId, std::string worldFile) :
+            id(pId),
+            sceneLoader(SceneLoader(worldFile)) {
+
     }
 
     virtual void localInit() = 0;

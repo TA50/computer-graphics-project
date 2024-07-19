@@ -23,8 +23,12 @@ enum ObjectType {
 
 class SceneLoader {
 public:
+    std::unordered_map < std::string, RenderType > renderTypes = {
+            {"stationary", STATIONARY},
+            {"moving",     MOVING}
+    };
     SceneLoader(std::string path) : filename(path) {
-            jsonData = nlohmann::json();
+        jsonData = nlohmann::json();
     }
 
     void readJson() {
@@ -48,7 +52,6 @@ public:
             throw e;
         }
     }
-
 
 
     std::unordered_map<std::string, GameObjectBase *> loadGameObjects(Light *lightObject) {
@@ -99,11 +102,11 @@ public:
         auto gameObject = new GameObjectBase(key);
         std::string modelPath = gameObjectData["modelPath"];
         auto textures = gameObjectData["textures"];
+        std::string modelType = gameObjectData["modelType"];
         auto textureInfo = loadTextures(gameObject, textures);
         for (auto &t: textureInfo) {
             gameObject->addTexture(t.first, t.second);
         }
-        std::string modelType = gameObjectData["modelType"];
         GameObjectLoader::GameObjectLoaderResult result{};
         if (modelType == "gltf") {
             result = GameObjectLoader::loadGltf(modelPath);
@@ -115,6 +118,9 @@ public:
 
         gameObject->setVertices(result.vertices);
         gameObject->setIndices(result.indices);
+
+        auto renderType = renderTypes[key];
+        gameObject->setRenderType(renderType);
         return gameObject;
     }
 

@@ -21,6 +21,9 @@ public:
 
     }
 
+    void setRenderType(RenderType type) {
+        renderType = type;
+    }
     void setVertices(std::vector<GameObjectVertex> v) {
         vertices = v;
     }
@@ -77,6 +80,7 @@ public:
     std::vector<GameObjectVertex> vertices;
     std::vector<uint32_t> indices;
     std::unordered_map<std::string, TextureInfo> textures;
+    RenderType renderType = RenderType::STATIONARY;
 protected:
     std::string id;
     glm::mat4 LocalMatrix = glm::mat4(1.0f);

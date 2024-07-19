@@ -6,7 +6,7 @@
 #include "animated-model/gltf-loader.hpp"
 #include "helper-structs.hpp"
 #include "game-object.hpp"
-#include "game-object-loader.hpp"
+#include "game-objects/game-object-loader.hpp"
 #include "world-loader.hpp"
 #include "SkyBox.hpp"
 #include "render-system/stationary-render-system.hpp"
@@ -31,6 +31,7 @@ protected:
     WorldLoader worldLoader = WorldLoader("assets/world.json");
     Light lightObject = Light();
 
+
     void loadModels(Light *lightObject) {
 
         gameObjects = worldLoader.loadGameObjects(lightObject);
@@ -38,6 +39,7 @@ protected:
         cola = gameObjects["cola-can"];
 
     }
+
 
     void setWorld() {
         for (auto [id, go]: gameObjects) {

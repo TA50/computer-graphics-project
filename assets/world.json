@@ -95,7 +95,11 @@
       "name": "Cola Can",
       "modelPath": "assets/models/cola-can/cola.gltf",
       "modelType": "gltf",
-      "baseTexture": "assets/models/cola-can/textures/Material_001_baseColor.png",
+      "textures": {
+          "base": {
+            "path": "assets/models/cola-can/textures/Material_001_baseColor.png"
+          }
+      },
       "cull": true,
       "scale": {
         "x": 10,

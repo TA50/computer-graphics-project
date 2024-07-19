@@ -6,7 +6,7 @@
 #include "animated-model/gltf-loader.hpp"
 #include "helper-structs.hpp"
 #include "game-object.hpp"
-#include "game-object-loader.hpp"
+#include "game-objects/game-object-loader.hpp"
 #include "world-loader.hpp"
 #include "light-object.hpp"
 

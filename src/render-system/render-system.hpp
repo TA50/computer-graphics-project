@@ -6,11 +6,6 @@
 #include "common.hpp"
 
 
-struct TextureInfo {
-    std::string path;
-    bool initSampler = true;
-    VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
-};
 
 struct CameraUniformBuffer {
     alignas(16) glm::mat4 view;

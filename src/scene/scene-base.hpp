@@ -38,14 +38,18 @@ public:
 
     void setLight() {
         sceneLoader.setLight(&lightConfig);
-
+        auto lightDir = glm::vec3(cos(glm::radians(lightConfig.ang1)), sin(glm::radians(lightConfig.ang2)), 0);
+        auto lightColor = glm::vec4(lightConfig.r, lightConfig.g, lightConfig.b, lightConfig.a);
+        auto eyePos = glm::vec3(glm::inverse(camera->matrices.view) * glm::vec4(0, 0, 0, 1));
+        light->setUBO(lightDir, lightColor, eyePos, camera->CamPosition);
     }
 
     void initLight() {
         light->init(BP);
-        auto lightDir = glm::vec3(cos(glm::radians(lightConfig.ang1)) * cos(glm::radians(lightConfig.ang2)),
-                                  sin(glm::radians(lightConfig.ang1)),
-                                  cos(glm::radians(lightConfig.ang1)) * sin(glm::radians(lightConfig.ang2)));
+//        auto lightDir = glm::vec3(cos(glm::radians(lightConfig.ang1)) * cos(glm::radians(lightConfig.ang2)),
+//                                  sin(glm::radians(lightConfig.ang1)),
+//                                  cos(glm::radians(lightConfig.ang1)) * sin(glm::radians(lightConfig.ang2)));
+        auto lightDir = glm::vec3(cos(glm::radians(lightConfig.ang1)), sin(glm::radians(lightConfig.ang2)), 0);
         auto lightColor = glm::vec4(lightConfig.r, lightConfig.g, lightConfig.b, lightConfig.a);
         auto eyePos = glm::vec3(glm::inverse(camera->matrices.view) * glm::vec4(0, 0, 0, 1));
         light->setUBO(lightDir, lightColor, eyePos, camera->CamPosition);
@@ -101,7 +105,7 @@ public:
 
     virtual void createRenderSystems() = 0;
 
-    virtual void updateUniformBuffer(uint32_t currentImage) = 0;
+    virtual void updateUniformBuffer(uint32_t currentImage, UserInput userInput) = 0;
 
     virtual void pipelinesAndDescriptorSetsInit() = 0;
 

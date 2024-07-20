@@ -19,6 +19,7 @@ public:
             {"stationary",    STATIONARY},
             {"moving",        MOVING},
             {"animated-skin", ANIMATED_SKIN},
+            {"pepsiman",      PEPSIMAN},
     };
 
     SceneLoader(std::string path) : filename(path) {
@@ -126,6 +127,7 @@ public:
                 std::string skinId = it.key();
                 std::cout << "Loading Skin: " << skinId << std::endl;
                 auto loadedSkin = loadSkin(skinId, it.value());
+
                 skinsMap[skinId] = loadedSkin;
             }
             return skinsMap;
@@ -138,7 +140,7 @@ public:
     GltfSkinBase *loadSkin(const std::string &skinId, nlohmann::json skinData) {
 
         std::string modelPath = skinData["modelPath"];
-
+        std::string renderType = skinData["renderType"];
 
         tinygltf::Model model = GltfLoader::loadGlTFFile(modelPath);
         std::vector<GltfSkinBase *> skins{};
@@ -158,7 +160,7 @@ public:
         for (auto &t: textureInfo) {
             skin->addTexture(t.first, t.second);
         }
-
+        skin->setRenderType(renderTypes[renderType]);
         return skin;
     }
 

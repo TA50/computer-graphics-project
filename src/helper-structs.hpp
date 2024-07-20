@@ -3,9 +3,10 @@
 #include "glm/glm.hpp"
 #include "common.hpp"
 
-struct AxisInput {
+struct UserInput {
     glm::vec3 axis;
     glm::vec3 rotation;
+    int key;
     float deltaTime;
 };
 

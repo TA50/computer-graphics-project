@@ -89,14 +89,14 @@ public:
 
     }
 
-    void updateUniformBuffer(uint32_t currentImage) override {
+    void updateUniformBuffer(uint32_t currentImage, UserInput userInput) override {
         for (auto [id, s]: skins) {
             s->update(BP->frameTime, false);
         }
+        camera->rotate(-userInput.rotation.y * userInput.deltaTime, -userInput.rotation.x * userInput.deltaTime, -userInput.rotation.z * userInput.deltaTime);
         camera->lookAt(skins["pepsiman"]->getPosition());
         camera->updateWorld();
         camera->updateViewMatrix();
-
 
         updateRenderSystems(currentImage);
     }
@@ -106,7 +106,7 @@ public:
         for (auto [id, system]: stationaryRenderSystems) {
             auto go = gameObjects[id];
             system->updateUniformBuffers(currentImage, {
-                    go->getModel()
+                    go->getModel() * camera->matrices.world
             });
         }
 

@@ -8,16 +8,17 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "animated-model/skin.hpp"
-#include "game-objects/game-object-base.hpp"
-#include "game-objects/game-object-loader.hpp"
 
+#include "game-objects/game-object-base.hpp"
+#include "game-objects/gltf-skin-base.hpp"
+#include "game-objects/game-object-loader.hpp"
 
 class SceneLoader {
 public:
     std::unordered_map<std::string, RenderType> renderTypes = {
-            {"stationary", STATIONARY},
-            {"moving",     MOVING}
+            {"stationary",    STATIONARY},
+            {"moving",        MOVING},
+            {"animated-skin", ANIMATED_SKIN},
     };
 
     SceneLoader(std::string path) : filename(path) {
@@ -58,10 +59,11 @@ public:
             return gameObjectsMap;
         } else {
             std::cout << "No game objects found in json" << std::endl;
+            return {};
         }
     }
 
-    std::unordered_map<std::string, TextureInfo> loadTextures(GameObjectBase *gameObject, nlohmann::json texturesData) {
+    std::unordered_map<std::string, TextureInfo> loadTextures(nlohmann::json texturesData) {
         std::unordered_map < std::string, TextureInfo > textures;
         for (nlohmann::json::iterator it = texturesData.begin(); it != texturesData.end(); ++it) {
             TextureInfo textureInfo;
@@ -86,7 +88,6 @@ public:
             }
 
             textures[key] = textureInfo;
-            gameObject->addTexture(key, textureInfo);
         }
 
         return textures;
@@ -98,7 +99,7 @@ public:
         auto textures = gameObjectData["textures"];
         std::string modelType = gameObjectData["modelType"];
         std::string renderType = gameObjectData["renderType"];
-        auto textureInfo = loadTextures(gameObject, textures);
+        auto textureInfo = loadTextures(textures);
         for (auto &t: textureInfo) {
             gameObject->addTexture(t.first, t.second);
         }
@@ -117,72 +118,49 @@ public:
         return gameObject;
     }
 
-//    std::unordered_map<std::string, Skin *> loadSkins(Light *lightObject) {
-//        if (jsonData.contains("skins")) {
-//            nlohmann::json skinsData = jsonData["skins"];
-//            std::unordered_map<std::string, Skin *> skinsMap;
-//            for (nlohmann::json::iterator it = skinsData.begin(); it != skinsData.end(); ++it) {
-//                std::string skinId = it.key();
-//                std::cout << "Loading Skin: " << skinId << std::endl;
-//                auto skinData = it.value();
-//                std::string name = skinData["name"];
-//                std::string modelPath = skinData["modelPath"];
-//                std::string baseTexture = skinData["baseTexture"];
-//                std::string metalicTexture;
-//                if (skinData["metallicTexture"].is_string()) {
-//                    metalicTexture = static_cast<std::string>(skinData["metallicTexture"]);
-//                }
-//                std::string diffuseTexture;
-//                if (skinData["diffuseTexture"].is_string()) {
-//                    diffuseTexture = static_cast<std::string>(skinData["diffuseTexture"]);
-//                }
-//                std::string roughnessTexture;
-//                if (skinData["roughnessTexture"].is_string()) {
-//                    roughnessTexture = static_cast<std::string>(skinData["roughnessTexture"]);
-//                }
-//                Skin *skin;
-//                tinygltf::Model model = GltfLoader::loadGlTFFile(modelPath);
-//                std::vector<Skin *> skins{};
-//                for (const auto &s: model.skins) {
-//                    auto sk = new Skin();
-//                    GltfLoader::loadSkin(model, s, sk);
-//                    skins.push_back(sk);
-//                }
-//                std::cout << "Loaded skin: " << skinId << std::endl;
-//                skin = skins[0];
-//                skin->setName(name);
-//                skin->setId(skinId);
-//                skin->setBaseTexture(baseTexture,
-//                                     VK_FORMAT_R8G8B8A8_SRGB,
-//                                     true);
-//                if (!metalicTexture.empty()) {
-//                    skin->setMetalicTexture(metalicTexture, VK_FORMAT_R8G8B8A8_SRGB, true);
-//                }
-//                if (!diffuseTexture.empty()) {
-//                    skin->setDiffuseTexture(diffuseTexture, VK_FORMAT_R8G8B8A8_UNORM, true);
-//                }
-//                if (!roughnessTexture.empty()) {
-//                    skin->setRoughnessTexture(roughnessTexture, VK_FORMAT_R8G8B8A8_SRGB, true);
-//                }
-//
-//                GltfLoader::loadAnimations(skin, model);
-//                std::cout << "Loaded animations" << std::endl;
-//                bool cameraFollow = skinData["cameraFollow"];
-//                if (cameraFollow) {
-//                    skin->setCameraFollow(true);
-//                } else {
-//                    skin->setCameraFollow(false);
-//                }
-//                skin->setLight(lightObject);
-//                skinsMap[skinId] = skin;
-//
-//            }
-//            return skinsMap;
-//        } else {
-//            std::cerr << "No skins found in json" << std::endl;
-//            throw std::runtime_error("No skins found in json");
-//        }
-//    }
+    std::unordered_map<std::string, GltfSkinBase *> loadSkins() {
+        if (jsonData.contains("skins")) {
+            nlohmann::json skinsData = jsonData["skins"];
+            std::unordered_map<std::string, GltfSkinBase *> skinsMap;
+            for (nlohmann::json::iterator it = skinsData.begin(); it != skinsData.end(); ++it) {
+                std::string skinId = it.key();
+                std::cout << "Loading Skin: " << skinId << std::endl;
+                auto loadedSkin = loadSkin(skinId, it.value());
+                skinsMap[skinId] = loadedSkin;
+            }
+            return skinsMap;
+        } else {
+            std::cerr << "No skins found in json" << std::endl;
+            throw std::runtime_error("No skins found in json");
+        }
+    }
+
+    GltfSkinBase *loadSkin(const std::string &skinId, nlohmann::json skinData) {
+
+        std::string modelPath = skinData["modelPath"];
+
+
+        tinygltf::Model model = GltfLoader::loadGlTFFile(modelPath);
+        std::vector<GltfSkinBase *> skins{};
+        for (const auto &s: model.skins) {
+            SkinData data = GltfLoader::loadSkinData(model, s);
+            data.id = skinId;
+            auto sk = GltfSkinBase::create(data);
+            skins.push_back(sk);
+        }
+        std::cout << "Loaded skin: " << skinId << std::endl;
+        GltfSkinBase *skin = skins[0];
+
+
+        auto textures = skinData["textures"];
+
+        auto textureInfo = loadTextures(textures);
+        for (auto &t: textureInfo) {
+            skin->addTexture(t.first, t.second);
+        }
+
+        return skin;
+    }
 
 
     glm::vec3 get(const std::string &key, ObjectType objectType, Transform transformType) {
@@ -209,10 +187,15 @@ public:
         }
         try {
 
-            glm::vec3 v = glm::vec3(1.0f);
-            v.x = jsonData[objectTypeStr][key][transformTypeStr]["x"];
-            v.y = jsonData[objectTypeStr][key][transformTypeStr]["y"];
-            v.z = jsonData[objectTypeStr][key][transformTypeStr]["z"];
+            nlohmann::json objectData = jsonData[objectTypeStr][key];
+
+            auto v = glm::vec3(1.0f);
+            if (objectData.contains(transformTypeStr)) {
+                v.x = jsonData[objectTypeStr][key][transformTypeStr]["x"];
+                v.y = jsonData[objectTypeStr][key][transformTypeStr]["y"];
+                v.z = jsonData[objectTypeStr][key][transformTypeStr]["z"];
+            }
+
             return v;
         } catch (nlohmann::json::exception &e) {
             std::cerr << "Error getting transform: " << e.what() << "input: " << " " << objectTypeStr << ":" << ":"
@@ -232,7 +215,7 @@ public:
         camera->CamTargetDelta.x = jsonData[key]["targetDelta"]["x"];
         camera->CamTargetDelta.y = jsonData[key]["targetDelta"]["y"];
         camera->CamTargetDelta.z = jsonData[key]["targetDelta"]["z"];
-        glm::vec3 pos = glm::vec3(0);
+        auto pos = glm::vec3(0);
         pos.x = jsonData[key]["position"]["x"];
         pos.y = jsonData[key]["position"]["y"];
         pos.z = jsonData[key]["position"]["z"];

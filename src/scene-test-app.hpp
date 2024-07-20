@@ -2,12 +2,9 @@
 #pragma once
 
 #include "modules/Starter.hpp"
-#include "animated-model/skin.hpp"
 #include "animated-model/gltf-loader.hpp"
 #include "helper-structs.hpp"
-#include "game-object.hpp"
 #include "game-objects/game-object-loader.hpp"
-#include "world-loader.hpp"
 #include "SkyBox.hpp"
 #include "scene/test-scene.hpp"
 

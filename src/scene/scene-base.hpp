@@ -11,6 +11,7 @@ class SceneBase {
 public:
     BaseProject *BP;
     std::unordered_map<std::string, GameObjectBase *> gameObjects;
+    std::unordered_map<std::string, GltfSkinBase *> skins;
     Camera *camera;
     Light *light;
     SceneLoader sceneLoader;
@@ -50,13 +51,14 @@ public:
         light->setUBO(lightDir, lightColor, eyePos, camera->CamPosition);
     }
 
-    void init(){
+    void init() {
 
         this->initLight();
         this->initRenderSystems();
 
         this->localInit();
     }
+
     void load(BaseProject *bp, float ar) {
         this->BP = bp;
         this->sceneLoader.readJson();
@@ -65,6 +67,7 @@ public:
         this->setCamera(ar);
         this->setLight();
         this->gameObjects = sceneLoader.loadGameObjects();
+        this->skins = sceneLoader.loadSkins();
 
         this->createRenderSystems();
     }
@@ -77,7 +80,15 @@ public:
             auto translation = sceneLoader.get(go->getId(), GAME_OBJECT, TRANSLATE);
             go->setTranslation(translation);
             go->setRotation(rotation);
-//            go->sets(scale);
+            go->setScaling(scale);
+        }
+        for (auto [id, sk]: skins) {
+            auto scale = sceneLoader.get(sk->getId(), SKIN, SCALE);
+            auto rotation = sceneLoader.get(sk->getId(), GAME_OBJECT, ROTATE);
+            auto translation = sceneLoader.get(sk->getId(), GAME_OBJECT, TRANSLATE);
+            sk->setTranslation(translation);
+            sk->setRotation(rotation);
+            sk->setScaling(scale);
         }
 
     }
@@ -87,6 +98,7 @@ public:
     virtual void localInit() = 0;
 
     virtual void initRenderSystems() = 0;
+
     virtual void createRenderSystems() = 0;
 
     virtual void updateUniformBuffer(uint32_t currentImage) = 0;

@@ -8,7 +8,6 @@
 #include "glm/gtc/matrix_transform.hpp"
 
 
-
 class GameObjectBase {
 public:
     GameObjectBase(std::string _id) : id(_id) {
@@ -18,6 +17,7 @@ public:
     void setRenderType(RenderType type) {
         renderType = type;
     }
+
     void setVertices(std::vector<GameObjectVertex> v) {
         vertices = v;
     }
@@ -43,6 +43,9 @@ public:
         translation = pos;
     }
 
+    void setScaling(glm::vec3 s) {
+        scaling = s;
+    }
 
     void setRotation(glm::vec3 degrees) {
         rotation = degrees;
@@ -52,11 +55,16 @@ public:
         LocalMatrix = m;
     }
 
+    glm::vec3 getPosition() {
+        auto model = getModel();
+        return glm::vec3(model[3]);
+    }
+
     glm::mat4 getLocalMatrix() {
         return LocalMatrix;
     }
 
-    glm::mat4 getModel() {
+    virtual glm::mat4 getModel() {
 
         auto M = LocalMatrix;
 

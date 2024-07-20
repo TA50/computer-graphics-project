@@ -42,47 +42,9 @@
       "near": 0.1,
       "far": 500
     },
-    "distance": 10
-  },
-  "gameObjects": {
-    "cola-can": {
-      "renderType": "stationary",
-      "name": "Cola Can",
-      "modelPath": "assets/models/cola-can/cola.gltf",
-      "modelType": "gltf",
-      "textures": {
-        "base": {
-          "path": "assets/models/cola-can/textures/Material_001_baseColor.png"
-        }
-      },
-      "cull": true,
-      "scale": {
-        "x": 10,
-        "y": 10,
-        "z": 10
-      },
-      "translate": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "rotate": {
-        "x": 0,
-        "y": 90,
-        "z": 0
-      }
-    }
+    "distance": 3
   },
   "skins": {
-    "pepsiman": {
-      "renderType": "animated-skin",
-      "modelPath": "assets/models/pepsiman/scene.gltf",
-      "textures": {
-        "base": {
-          "path": "assets/models/pepsiman/textures/Pepsiman_baseColor.png"
-        }
-      }
-    },
     "luna": {
       "renderType": "animated-skin",
       "modelPath": "assets/models/lynx_-_stars_-_animated/scene.gltf",
@@ -94,3 +56,4 @@
     }
   }
 }
+

@@ -94,7 +94,7 @@ public:
             s->update(BP->frameTime, false);
         }
         camera->rotate(-userInput.rotation.y * userInput.deltaTime, -userInput.rotation.x * userInput.deltaTime, -userInput.rotation.z * userInput.deltaTime);
-        camera->lookAt(skins["pepsiman"]->getPosition());
+        camera->lookAt(skins["luna"]->getPosition());
         camera->updateWorld();
         camera->updateViewMatrix();
 
@@ -161,6 +161,7 @@ public:
         for (auto [id, system]: stationaryRenderSystems) {
             system->populateCommandBuffer(commandBuffer, currentImage);
         }
+
 
         for (auto [id, system]: animatedSkinRenderSystems) {
             system->populateCommandBuffer(commandBuffer, currentImage);

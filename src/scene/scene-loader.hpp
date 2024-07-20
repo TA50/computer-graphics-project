@@ -29,7 +29,7 @@ public:
     void readJson() {
         std::ifstream i(filename);
         if (!i.is_open()) {
-            std::cerr << "Error opening file" << std::endl;
+            std::cerr << "Error opening file " << filename << std::endl;
             jsonData = nlohmann::json();
         }
 

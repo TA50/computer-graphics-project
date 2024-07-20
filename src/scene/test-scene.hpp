@@ -93,6 +93,13 @@ public:
         for (auto [id, s]: skins) {
             s->update(BP->frameTime, false);
         }
+
+        if (userInput.key == GLFW_KEY_B) {
+            this->sceneLoader.readJson();
+            setWorld();
+            this->setLight();
+        }
+
         camera->rotate(-userInput.rotation.y * userInput.deltaTime, -userInput.rotation.x * userInput.deltaTime, -userInput.rotation.z * userInput.deltaTime);
         camera->lookAt(skins["luna"]->getPosition());
         camera->updateWorld();

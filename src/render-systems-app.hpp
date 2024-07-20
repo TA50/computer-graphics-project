@@ -133,7 +133,7 @@ protected:
         float deltaT;
         glm::vec3 m = glm::vec3(0.0f), r = glm::vec3(0.0f);
         bool fire = false;
-        getSixAxis(deltaT, m, r, fire);
+//        getSixAxis(deltaT, m, r, fire);
 
         camera.rotate(-r.y * deltaT, -r.x * deltaT, -r.z * deltaT);
 

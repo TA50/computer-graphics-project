@@ -66,6 +66,7 @@ public:
         for (auto [id, s]: skins) {
             s->update(BP->frameTime, false);
         }
+
         if (userInput.key == GLFW_KEY_B) {
             this->sceneLoader.readJson();
             setWorld();

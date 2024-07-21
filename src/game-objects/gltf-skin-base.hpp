@@ -70,6 +70,15 @@ public:
     }
 
 // Transformations
+
+    void move(glm::vec3 pos) {
+        translation += pos;
+    }
+
+    void rotate(glm::vec3 rot) {
+        rotation += rot;
+    }
+
     void setTranslation(glm::vec3 pos) {
         translation = pos;
     }
@@ -95,22 +104,25 @@ public:
         return rootJoint->getGlobalMatrix() * getTransformedWorldMatrix();
     }
 
-    glm::vec3 getPosition(){
+    glm::vec3 getPosition() {
         auto model = getModel();
         return glm::vec3(model[3]);
     }
+
     virtual std::unordered_map<int, glm::mat4> getJointMatrices() {
         return jointMatrices;
     }
 
     glm::mat4 getTransformedWorldMatrix() {
         glm::mat4 M = LocalMatrix;
-        M = glm::scale(M, scaling);
-        M = glm::rotate(M, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-        M = glm::rotate(M, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-        M = glm::rotate(M, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-        M = glm::translate(M, translation);
-        return M;
+
+        auto S = glm::scale(glm::mat4(1), scaling);
+        auto T = glm::translate(glm::mat4(1), translation);
+        auto Ry = glm::rotate(glm::mat4(1), glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+        auto Rx = glm::rotate(glm::mat4(1), glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+        auto Rz = glm::rotate(glm::mat4(1), glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        return  T * Ry * Rx * Rz * S * LocalMatrix ;
     }
 
     // skinning

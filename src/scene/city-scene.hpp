@@ -8,16 +8,22 @@
 class CityScene : public SceneBase {
 public:
 
+    std::string walkingCharacterId = "man";
+
     CityScene(std::string pId, std::string worldFile) :
             SceneBase(pId, worldFile) {
     }
 
-    std::unordered_map<std::string, StationaryRenderSystem *> stationaryRenderSystems;
+    glm::mat4 CityWorldMatrix = glm::mat4(1.0f);
+    std::vector<GameObjectBase *> cityMeshes = {
+
+    };
+    std::unordered_map<std::string, StationaryRenderSystem *> cityRenderSystems;
     std::unordered_map<std::string, AnimatedSkinRenderSystem *> animatedSkinRenderSystems;
 
     PoolSizes getPoolSizes() override {
         PoolSizes poolSizes;
-        for (auto [id, system]: stationaryRenderSystems) {
+        for (auto [id, system]: cityRenderSystems) {
             poolSizes.uniformBlocksInPool += system->getPoolSizes().uniformBlocksInPool;
             poolSizes.texturesInPool += system->getPoolSizes().texturesInPool;
             poolSizes.setsInPool += system->getPoolSizes().setsInPool;
@@ -31,7 +37,7 @@ public:
     }
 
     void initRenderSystems() override {
-        for (auto [id, system]: stationaryRenderSystems) {
+        for (auto [id, system]: cityRenderSystems) {
             system->init(BP, camera, light);
         }
         for (auto [id, system]: animatedSkinRenderSystems) {
@@ -39,7 +45,78 @@ public:
         }
     }
 
+    void setCity() {
+        auto json = sceneLoader.getJson();
+        nlohmann::json j = json["city"];
+        glm::vec3 scale = glm::vec3(1);
+        glm::vec3 pos = glm::vec3(0);
+        glm::vec3 rot = glm::vec3(0);
+        if (j.contains("scale")) {
+            nlohmann::json s = j["scale"];
+            float x = s["x"];
+            float y = s["y"];
+            float z = s["z"];
+            scale = glm::vec3(x, y, z);
+        }
+        if (j.contains("translate")) {
+            nlohmann::json s = j["translate"];
+            float x = s["x"];
+            float y = s["y"];
+            float z = s["z"];
+            pos = glm::vec3(x, y, z);
+        }
+        if (j.contains("rotate")) {
+            nlohmann::json s = j["rotate"];
+            float x = s["x"];
+            float y = s["y"];
+            float z = s["z"];
+            rot = glm::vec3(x, y, z);
+        }
+
+        CityWorldMatrix = glm::translate(glm::mat4(1), pos)
+                          * glm::rotate(glm::mat4(1), glm::radians(rot.y), glm::vec3(0, 1, 0))
+                          * glm::rotate(glm::mat4(1), glm::radians(rot.x), glm::vec3(1, 0, 0))
+                          * glm::rotate(glm::mat4(1), glm::radians(rot.z), glm::vec3(0, 0, 1))
+                          * glm::scale(glm::mat4(1), scale);
+
+    }
+
     void createRenderSystems() override {
+        auto json = sceneLoader.getJson();
+        nlohmann::json j = json["city"];
+        std::string baseFolder = j["modelFolder"];
+        std::string modelPath = j["modelPath"];
+        auto model = GameObjectLoader::loadGltfMulti(modelPath);
+        CityWorldMatrix = model.Wm;
+        for (auto m: model.meshes) {
+
+            auto go = new GameObjectBase(m.name);
+            go->vertices = m.vertices;
+            go->indices = m.indices;
+            TextureInfo textureInfo{};
+            textureInfo.path = baseFolder + "/" + m.baseColorTexture;
+            textureInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+            textureInfo.initSampler = true;
+
+            go->addTexture("base", textureInfo);
+            go->renderType = STATIONARY;
+            gameObjects[m.name] = go;
+
+            auto renderSystem = new StationaryRenderSystem(go->getId());
+            std::vector<StationarySystemVertex> vertices;
+            for (auto v: go->vertices) {
+                StationarySystemVertex vertex;
+                vertex.pos = v.pos;
+                vertex.normal = v.normal;
+                vertex.uv = v.uv;
+                vertices.push_back(vertex);
+            }
+            renderSystem->addVertices(vertices, go->indices);
+            renderSystem->setTextures(go->textures);
+            cityRenderSystems[go->getId()] = renderSystem;
+        }
+
+
         for (auto [id, go]: gameObjects) {
             if (go->renderType == STATIONARY) {
                 auto renderSystem = new StationaryRenderSystem(id);
@@ -53,7 +130,7 @@ public:
                 }
                 renderSystem->addVertices(vertices, go->indices);
                 renderSystem->setTextures(go->textures);
-                stationaryRenderSystems[id] = renderSystem;
+                cityRenderSystems[id] = renderSystem;
             }
 
         }
@@ -86,34 +163,81 @@ public:
             s->updateJointMatrices();
         }
 
+        setCity();
+
     }
 
+    bool pause = true;
+    float ang = 180;
+
     void updateUniformBuffer(uint32_t currentImage, UserInput userInput) override {
-        for (auto [id, s]: skins) {
-            s->update(BP->frameTime, false);
+
+        auto walkingCharacter = skins[walkingCharacterId];
+
+        if (userInput.key == GLFW_KEY_P) {
+            pause = true;
         }
+
+        if (userInput.key == GLFW_KEY_O) {
+            pause = false;
+        }
+
+        if (userInput.key == GLFW_KEY_0) {
+            walkingCharacter->setTranslation(glm::vec3(0, 0, 0));
+            walkingCharacter->setRotation(glm::vec3(0, 0, 0));
+        }
+        if (!pause) {
+            auto m = userInput.axis;
+            m.y = m.z;
+            m.z = 0;
+            auto r = userInput.rotation;
+            auto deltaT = userInput.deltaTime;
+            auto MOVE_SPEED = gameConfig.heroSpeed;
+            auto x = glm::vec3(0);
+            glm::vec3 Pos  = glm::vec3(0);
+            if ((m.x != 0) || (m.y != 0)) {
+                ang = atan2(m.x, m.y);
+                if (ang < 0) {
+                    ang += 2 * glm::pi<float>();
+                }
+                if (ang > 2 * glm::pi<float>()) {
+                    ang -= 2 * glm::pi<float>();
+                }
+                Pos.y = cos(ang);
+                Pos.x = -sin(ang);
+            }
+            walkingCharacter->setRotation(glm::vec3(0, 0, -180 + glm::degrees(ang)));
+            walkingCharacter->move(Pos * MOVE_SPEED * deltaT);
+            for (auto [id, s]: skins) {
+                s->update(BP->frameTime * gameConfig.heroAnimationSpeed, pause);
+            }
+        }
+
 
         if (userInput.key == GLFW_KEY_B) {
             this->sceneLoader.readJson();
-            setWorld();
+//            setWorld();
             this->setLight();
+            setCity();
+            setCamera(userInput.aspectRatio);
+
+            setGame();
         }
 
         camera->rotate(-userInput.rotation.y * userInput.deltaTime, -userInput.rotation.x * userInput.deltaTime,
                        -userInput.rotation.z * userInput.deltaTime);
-        camera->lookAt(glm::vec3(0.0f, 0.0f, 0.0f));
+        camera->lookAt(walkingCharacter->getPosition());
         camera->updateWorld();
         camera->updateViewMatrix();
-
         updateRenderSystems(currentImage);
     }
 
     void updateRenderSystems(uint32_t currentImage) {
 
-        for (auto [id, system]: stationaryRenderSystems) {
+        for (auto [id, system]: cityRenderSystems) {
             auto go = gameObjects[id];
             system->updateUniformBuffers(currentImage, {
-                    go->getModel() * camera->matrices.world
+                    CityWorldMatrix * go->getModel()
             });
         }
 
@@ -122,7 +246,13 @@ public:
             auto jointMatrices = skin->getJointMatrices();
 
             AnimatedSkinRenderSystemData data{};
-            data.model = skin->getModel();
+            if (id == walkingCharacterId) {
+                data.model = skin->getModel() * camera->matrices.world;
+                auto pos = data.model[3];
+            } else {
+                data.model = skin->getModel();
+
+            }
             for (auto [jointIndex, jointMatrix]: jointMatrices) {
                 data.jointTransformMatrices[jointIndex] = jointMatrix;
             }
@@ -132,7 +262,7 @@ public:
     }
 
     void pipelinesAndDescriptorSetsInit() override {
-        for (auto [id, system]: stationaryRenderSystems) {
+        for (auto [id, system]: cityRenderSystems) {
             system->pipelinesAndDescriptorSetsInit();
         }
 
@@ -144,7 +274,7 @@ public:
     }
 
     void pipelinesAndDescriptorSetsCleanup() override {
-        for (auto [id, system]: stationaryRenderSystems) {
+        for (auto [id, system]: cityRenderSystems) {
             system->pipelinesAndDescriptorSetsCleanup();
         }
 
@@ -155,7 +285,7 @@ public:
 
     void localCleanup() override {
 
-        for (auto [id, system]: stationaryRenderSystems) {
+        for (auto [id, system]: cityRenderSystems) {
             system->cleanup();
         }
 
@@ -165,7 +295,7 @@ public:
     }
 
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) override {
-        for (auto [id, system]: stationaryRenderSystems) {
+        for (auto [id, system]: cityRenderSystems) {
             system->populateCommandBuffer(commandBuffer, currentImage);
         }
 

@@ -16,7 +16,7 @@ public:
     Light *light;
     SceneLoader sceneLoader;
     std::string id;
-
+    GameConfig gameConfig;
     LightConfig lightConfig;
 
 
@@ -36,6 +36,9 @@ public:
         camera->updatePerspective();
     }
 
+    void setGame(){
+        sceneLoader.setGame(&gameConfig);
+    }
     void setLight() {
         sceneLoader.setLight(&lightConfig);
         auto lightDir = glm::vec3(cos(glm::radians(lightConfig.ang1)), sin(glm::radians(lightConfig.ang2)), 0);
@@ -59,7 +62,7 @@ public:
 
         this->initLight();
         this->initRenderSystems();
-
+        setGame();
         this->localInit();
     }
 
@@ -93,6 +96,7 @@ public:
             sk->setTranslation(translation);
             sk->setRotation(rotation);
             sk->setScaling(scale);
+            std::cout << "Skin: " << sk->getId() << std::endl;
         }
 
     }

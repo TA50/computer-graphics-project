@@ -8,6 +8,7 @@ struct UserInput {
     glm::vec3 rotation;
     int key;
     float deltaTime;
+    float aspectRatio;
 };
 
 struct skyBoxUniformBufferObject {

@@ -66,15 +66,15 @@ public:
 
 
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) override {
-        std::cout << "StationaryRenderSystem: Populating command buffer" << std::endl;
+
         P.bind(commandBuffer);
         DS.bind(commandBuffer, P, SET_ID, currentImage);
-        std::cout << "StationaryRenderSystem: binding ds: " << SET_ID << std::endl;
+
         GDS.bind(commandBuffer, P, GLOBAL_SET_ID, currentImage);
-        std::cout << "StationaryRenderSystem: binding GDS: " << GLOBAL_SET_ID << std::endl;
+
 
         bindVertexBuffers(commandBuffer);
-        std::cout << "StationaryRenderSystem: binding vertex buffers" << std::endl;
+
     }
 
     void updateUniformBuffers(uint32_t currentImage, StationaryRenderSystemData data) override {
@@ -116,7 +116,7 @@ protected:
                               cullMode, false);
 
         initTextures();
-        std::cout << "StationaryRenderSystem initialized" << std::endl;
+
     }
 
 

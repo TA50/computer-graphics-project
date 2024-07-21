@@ -72,7 +72,7 @@ protected:
         bool fire = false;
         getSixAxis(deltaT, m, r, fire);
 
-        UserInput userInput = {m, r, curDebounce, deltaT};
+        UserInput userInput = {m, r, curDebounce, deltaT, Ar};
 
         for (auto [K, s]: scenes) {
             if (K == curDebounce && curScene != K && debounce) {
@@ -98,7 +98,6 @@ protected:
                 if (!debounce) {
                     debounce = true;
                     curDebounce = i;
-                    std::cout << "Key pressed: " << i << std::endl;
                 }
             } else {
                 if ((curDebounce == i) && debounce) {

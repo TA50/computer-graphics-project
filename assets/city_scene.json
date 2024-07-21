@@ -1,9 +1,9 @@
 {
   "game": {
-    "heroSpeed": 50,
+    "heroSpeed": 700,
     "villainSpeed": 0.5,
     "villainAnimationSpeed": 3,
-    "heroAnimationSpeed": 2
+    "heroAnimationSpeed": 1
   },
   "light": {
     "ang1": 135.0,
@@ -38,29 +38,43 @@
       "z": 0
     },
     "perspective": {
-      "fov": 50,
+      "fov": 60,
       "near": 0.1,
       "far": 500
     },
-    "distance": 3
+    "distance": 6
   },
-  "gameObjects": {
-    "city": {
-      "renderType": "stationary",
-      "modelPath": "assets/models/imaginary_city_i/scene.gltf",
-      "modelType": "gltf",
-      "textures": {
-        "base": {
-          "path": "assets/models/imaginary_city_i/textures/CityEngineMaterial_1_mat_0_baseColor.jpeg"
-        }
-      },
-      "scale": {
-        "x": 1,
-        "y": 1,
-        "z": 1
-      }
+  "city": {
+    "modelPath": "assets/models/big_city/scene.gltf",
+    "modelFolder": "assets/models/big_city",
+    "renderType": "stationary",
+    "scale": {
+      "x": 1,
+      "y": 1,
+      "z": 1
+    },
+    "rotate": {
+      "x": -90.15,
+      "y": -0.0,
+      "z": 0.0
+    },
+    "translate": {
+      "x": 8.0,
+      "y": 0.23,
+      "z": 0.0
     }
   },
-  "skins": {}
+  "skins": {
+    "man": {
+      "renderType": "animated-skin",
+      "modelPath": "assets/models/male_basic_walk_30_frames_loop/scene.gltf",
+      "textures": {
+        "base": {
+          "path": "assets/models/male_basic_walk_30_frames_loop/textures/peopleColors_baseColor.png"
+        }
+      }
+    }
+  }
 }
+
 

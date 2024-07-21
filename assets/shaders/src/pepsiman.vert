@@ -8,6 +8,8 @@ layout(location = 4) in vec4 inJointWeights;
 layout(location = 5) in vec3 inColor;
 layout(location = 6) in vec4 inTan;
 
+
+
 layout(set = 1, binding = 0) uniform ModelUniformBufferObject {
     mat4  model;
     mat4 jointTransformMatrices[100];

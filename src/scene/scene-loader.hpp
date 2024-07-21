@@ -252,7 +252,7 @@ public:
         glm::vec3 rotation = glm::vec3(0);
         rotation.x = jsonData[key]["rotate"]["x"];
         rotation.y = jsonData[key]["rotate"]["y"];
-        rotation.z = jsonData[key]["rotate"]["z"];
+        rotation.z = 0;
 
 
         glm::vec4 color = glm::vec4(1.0f);

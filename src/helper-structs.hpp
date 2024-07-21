@@ -49,10 +49,10 @@ struct LightConfig {
 
 struct GameObjectVertex {
     glm::vec3 pos;
-    glm::vec3 normal;
-    glm::vec2 uv;
+    glm::vec3 normal = glm::vec3(0.0f);
+    glm::vec2 uv = glm::vec2(0.0f);
     glm::vec4 inColor = glm::vec4(1.0f);
-    glm::vec4 tangent;
+    glm::vec4 tangent = glm::vec4(0.0f);
 };
 
 

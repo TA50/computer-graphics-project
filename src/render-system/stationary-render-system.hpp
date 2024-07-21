@@ -121,7 +121,7 @@ protected:
 
 
 private:
-    VkCullModeFlagBits cullMode = VK_CULL_MODE_NONE;
+    VkCullModeFlagBits cullMode = VK_CULL_MODE_BACK_BIT;
     Pipeline P;
     DescriptorSetLayout DSL;
     DescriptorSet DS;

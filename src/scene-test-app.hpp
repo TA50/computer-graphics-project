@@ -9,6 +9,7 @@
 #include "scene/only-pepsiman-scene.hpp"
 #include "scene/test-scene.hpp"
 #include "scene/scene-base.hpp"
+#include "scene/city-scene.hpp"
 
 class SceneTestApp : public BaseProject {
 protected:
@@ -18,12 +19,15 @@ protected:
     float Ar;
     OnlyPepsimanScene *onlyPepsimanScene = new OnlyPepsimanScene("pepsiman-only", "assets/pepsiman-alone.json");
     TestScene *testScene = new TestScene("test-scene", "assets/test_scene.json");
+    CityScene *cityScene = new CityScene("test-scene", "assets/city_scene.json");
+
     glm::vec3 CameraInitialPosition = glm::vec3(0, 2.07f, 2);
 
 
     std::unordered_map<int, SceneBase *> scenes = {
-            {GLFW_KEY_1, testScene},
-            {GLFW_KEY_2, onlyPepsimanScene}
+            {GLFW_KEY_1, cityScene},
+//            {GLFW_KEY_2, onlyPepsimanScene},
+//            {GLFW_KEY_3, cityScene}
     };
 
     // Here you set the main application parameters

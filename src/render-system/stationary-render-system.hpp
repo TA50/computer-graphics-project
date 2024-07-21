@@ -46,11 +46,13 @@ public:
 
     PoolSizes getPoolSizes() override {
         PoolSizes poolSizes = {};
-        poolSizes.uniformBlocksInPool = 3;
-        poolSizes.texturesInPool = 1;
-        poolSizes.setsInPool = 2;
+        auto basePoolSizes = getBasePoolSizes();
+        poolSizes.uniformBlocksInPool = 1 + basePoolSizes.uniformBlocksInPool;
+        poolSizes.texturesInPool = 1 + basePoolSizes.texturesInPool;// 1 for base texture
+        poolSizes.setsInPool = 1 + basePoolSizes.setsInPool; // 1 for model
         return poolSizes;
     }
+
 
     void pipelinesAndDescriptorSetsInit() override {
         P.create();
@@ -72,7 +74,14 @@ public:
 
         GDS.bind(commandBuffer, P, GLOBAL_SET_ID, currentImage);
 
-
+        AmbientLightUniformBuffer ambientUbo{};
+//        ambientUbo.cxp = glm::vec3(1.0f, 0.5f, 0.5f) * 0.2f;
+//        ambientUbo.cxn = glm::vec3(0.9f, 0.6f, 0.4f) * 0.2f;
+//        ambientUbo.cyp = glm::vec3(0.3f, 1.0f, 1.0f) * 0.2f;
+//        ambientUbo.cyn = glm::vec3(0.5f, 0.5f, 0.5f) * 0.2f;
+//        ambientUbo.czp = glm::vec3(0.8f, 0.2f, 0.4f) * 0.2f;
+//        ambientUbo.czn = glm::vec3(0.3f, 0.6f, 0.7f) * 0.2f;
+        updateAmbient(currentImage);
         bindVertexBuffers(commandBuffer);
 
     }
@@ -83,12 +92,20 @@ public:
 
         DS.map((int) currentImage, &ubo, MODEL_DATA_BINDING);
 
+
         CameraUniformBuffer cameraUBO{};
         cameraUBO.view = camera->matrices.view;
         cameraUBO.projection = camera->matrices.perspective;
+        cameraUBO.position = camera->CamPosition;
         GDS.map((int) currentImage, &cameraUBO, (int) CAMERA_DATA_BINDING);
-        LightUnifromBufferObject lightUBO = light->getUBO();
+        LightUniformBuffer lightUBO{};
+        lightUBO.position = light->lightInfo.position;
+        lightUBO.direction = light->lightInfo.direction;
+        lightUBO.color = light->lightInfo.color;
+        lightUBO.specularGamma = light->specularGamma;
+
         GDS.map((int) currentImage, &lightUBO, (int) LIGHT_DATA_BINDING);
+        updateAmbient(currentImage);
     }
 
 protected:

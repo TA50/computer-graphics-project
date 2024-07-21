@@ -19,6 +19,7 @@ layout(set = 1, binding = 0) uniform ModelUniformBufferObject {
 layout(set = 0, binding = 0) uniform CameraUniformBufferObject {
     mat4 view;
     mat4 proj;
+   vec3 position;
 } cubo;
 
 void main(){

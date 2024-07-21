@@ -17,10 +17,12 @@ layout(set = 1, binding = 0) uniform ModelUniformBufferObject {
     mat4 jointTransformMatrices[100];
 } ubo;
 
-layout(set = 0, binding = 0) uniform CameraUniformBufferObject {
+layout(set = 0, binding = 0) uniform LightUniformBufferObject{
     mat4 view;
-    mat4 proj;
+    mat4 projection;
+    vec3 position;
 } cubo;
+
 
 
 mat4 calcSkinMat() {
@@ -37,7 +39,7 @@ void main() {
 
     mat4 skinMat = calcSkinMat();
     mat4 viewModel = cubo.view * ubo.model;
-    gl_Position = cubo.proj * viewModel * skinMat * vec4(inPosition.xyz, 1.0);
+    gl_Position = cubo.projection * viewModel * skinMat * vec4(inPosition.xyz, 1.0);
 
     fragNorm = normalize(transpose(inverse(mat3(viewModel * skinMat))) * inNormal);
     fragPos = vec3(ubo.model * vec4(inPosition, 1.0));

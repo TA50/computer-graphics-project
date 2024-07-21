@@ -1,7 +1,7 @@
-#include "scene-test-app.hpp"
+#include "app.hpp"
 
 int main() {
-    SceneTestApp app;
+    App app;
     try {
         app.run();
 //        auto model = GameObjectLoader::loadGltfMulti("assets/models/big_city/scene.gltf");

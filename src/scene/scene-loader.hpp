@@ -4,6 +4,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "headers/json.hpp"
 #include "common.hpp"
+#include "light-object.hpp"
 #include "enums.hpp"
 #include <iostream>
 #include <fstream>
@@ -91,6 +92,7 @@ public:
             return {};
         }
     }
+
     std::unordered_map<std::string, GameObjectBase *> loadGameObjects() {
         if (jsonData.contains("gameObjects")) {
             nlohmann::json gameObjectsData = jsonData["gameObjects"];
@@ -208,6 +210,7 @@ public:
     nlohmann::json getJson() {
         return jsonData;
     }
+
     glm::vec3 get(const std::string &key, ObjectType objectType, Transform transformType) {
         std::string transformTypeStr;
         std::string objectTypeStr;
@@ -282,20 +285,51 @@ public:
         config->villainAnimationSpeed = jsonData[key]["villainAnimationSpeed"];
     }
 
-
-    void setLight(LightConfig *config) {
+    void setLight(Light *light) {
         auto key = "light";
-        config->ang1 = jsonData[key]["ang1"];
-        config->ang2 = jsonData[key]["ang2"];
-        config->ang3 = jsonData[key]["ang3"];
-        config->r = jsonData[key]["color"]["r"];
-        config->g = jsonData[key]["color"]["g"];
-        config->b = jsonData[key]["color"]["b"];
-        config->a = jsonData[key]["color"]["a"];
-        config->x = jsonData[key]["position"]["x"];
-        config->y = jsonData[key]["position"]["y"];
-        config->z = jsonData[key]["position"]["z"];
+        glm::vec3 translation = glm::vec3(0);
+        translation.x = jsonData[key]["translate"]["x"];
+        translation.y = jsonData[key]["translate"]["y"];
+        translation.z = jsonData[key]["translate"]["z"];
+
+        glm::vec3 rotation = glm::vec3(0);
+        rotation.x = jsonData[key]["rotate"]["x"];
+        rotation.y = jsonData[key]["rotate"]["y"];
+        rotation.z = jsonData[key]["rotate"]["z"];
+
+
+        glm::vec4 color = glm::vec4(1.0f);
+        color.r = jsonData[key]["color"]["r"];
+        color.g = jsonData[key]["color"]["g"];
+        color.b = jsonData[key]["color"]["b"];
+        color.a = jsonData[key]["color"]["a"];
+        light->setTranslation(translation);
+        light->setRotation(rotation);
+        light->setColor(color);
+
+
+
+        // gamma
+        if (jsonData[key].contains("specularGamma")) {
+            light->specularGamma = jsonData[key]["specularGamma"];
+        }
+
+        // ambient
+        if (jsonData[key].contains("ambient")) {
+            auto ambient = jsonData[key]["ambient"];
+            AmbientColors ambientColors{};
+            ambientColors.cxp = glm::vec3(ambient["cxp"]["r"], ambient["cxp"]["g"], ambient["cxp"]["b"]);
+            ambientColors.cxn = glm::vec3(ambient["cxn"]["r"], ambient["cxn"]["g"], ambient["cxn"]["b"]);
+            ambientColors.cyp = glm::vec3(ambient["cyp"]["r"], ambient["cyp"]["g"], ambient["cyp"]["b"]);
+            ambientColors.cyn = glm::vec3(ambient["cyn"]["r"], ambient["cyn"]["g"], ambient["cyn"]["b"]);
+            ambientColors.czp = glm::vec3(ambient["czp"]["r"], ambient["czp"]["g"], ambient["czp"]["b"]);
+            ambientColors.czn = glm::vec3(ambient["czn"]["r"], ambient["czn"]["g"], ambient["czn"]["b"]);
+            light->ambientColors = ambientColors;
+        }
+
+        light->update();
     }
+
 
 private :
     nlohmann::json jsonData;

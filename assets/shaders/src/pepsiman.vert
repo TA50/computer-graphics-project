@@ -16,14 +16,8 @@ layout(set = 1, binding = 0) uniform ModelUniformBufferObject {
 layout(set = 0, binding = 0) uniform CameraUniformBufferObject {
     mat4 view;
     mat4 proj;
-} cubo;
-
-layout(set = 0, binding = 1) uniform LightUniformBufferObject{
-    vec3 lightDir;
-    vec4 lightColor;
-    vec3 eyePos;
     vec3 cameraPos;
-} lubo;
+} cubo;
 
 
 layout (location = 0) out vec3 outNormal;

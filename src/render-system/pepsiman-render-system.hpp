@@ -59,9 +59,10 @@ public:
 
     PoolSizes getPoolSizes() override {
         PoolSizes poolSizes = {};
-        poolSizes.uniformBlocksInPool = 3; // 1 for model, 1 for camera, 1 for light
-        poolSizes.texturesInPool = 3; // 1 for base texture
-        poolSizes.setsInPool = 2; // 1 for model, 1 for camera and light
+        auto basePoolSizes = getBasePoolSizes();
+        poolSizes.uniformBlocksInPool = 1 + basePoolSizes.uniformBlocksInPool;
+        poolSizes.texturesInPool = 3 + basePoolSizes.texturesInPool;; // 1 for base texture
+        poolSizes.setsInPool = 1 + basePoolSizes.setsInPool;; // 1 for model, 1 for camera and light
         return poolSizes;
     }
 
@@ -83,6 +84,8 @@ public:
         DS.bind(commandBuffer, P, SET_ID, currentImage);
         GDS.bind(commandBuffer, P, GLOBAL_SET_ID, currentImage);
         bindVertexBuffers(commandBuffer);
+
+
     }
 
     void updateUniformBuffers(uint32_t currentImage, PepsimanRenderSystemData data) override {
@@ -97,9 +100,15 @@ public:
         CameraUniformBuffer cameraUBO{};
         cameraUBO.view = camera->matrices.view;
         cameraUBO.projection = camera->matrices.perspective;
+        cameraUBO.position = camera->CamPosition;
         GDS.map((int) currentImage, &cameraUBO, (int) CAMERA_DATA_BINDING);
-        LightUnifromBufferObject lightUBO = light->getUBO();
+        LightUniformBuffer lightUBO{};
+        lightUBO.position = light->lightInfo.position;
+        lightUBO.direction = light->lightInfo.direction;
+        lightUBO.color = light->lightInfo.color;
+        lightUBO.specularGamma = light->specularGamma;
         GDS.map((int) currentImage, &lightUBO, (int) LIGHT_DATA_BINDING);
+        updateAmbient(currentImage);
     }
 
 protected:

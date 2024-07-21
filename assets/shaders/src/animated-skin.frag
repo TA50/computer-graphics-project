@@ -8,20 +8,41 @@ layout(location = 2) in vec2 fragUV;
 layout(set = 1, binding = 1) uniform sampler2D baseTex;
 
 layout(set = 0, binding = 1) uniform LightUniformBufferObject{
-    vec3 lightDir;
-    vec4 lightColor;
-    vec3 eyePos;
+    vec3 position;
+    vec3 direction;
+    vec3 color;
+    float specularGamma;
 } lubo;
+
+
+
+layout(set = 0, binding = 2) uniform AmbientUniformBufferObject{
+    vec3 cxp;
+    vec3 cxn;
+    vec3 cyp;
+    vec3 cyn;
+    vec3 czp;
+    vec3 czn;
+} ambient;
+
+
+
+layout(set = 0, binding = 0) uniform CameraUniformBufferObject{
+    mat4 view;
+    mat4 projection;
+    vec3 position;
+} cubo;
+
 
 layout(location = 0) out vec4 fragColor;
 
 void main(){
 
     vec3 Norm = normalize(fragNorm);
-    vec3 EyeDir = normalize(lubo.eyePos - fragPos);
+    vec3 EyeDir = normalize(cubo.position - fragPos);
 
-    vec3 lightDir = normalize(lubo.lightDir);
-    vec3 lightColor = lubo.lightColor.rgb;
+    vec3 lightDir = normalize(lubo.direction);
+    vec3 lightColor = lubo.color.rgb;
 
     vec3 Diffuse = texture(baseTex, fragUV).rgb  * max(dot(Norm, lightDir), 0.0);
     //    vec3 Specular = vec3(pow(max(dot(Norm, normalize(lightDir + EyeDir)), 0.0), 200.0));

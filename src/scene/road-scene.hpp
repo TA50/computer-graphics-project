@@ -5,12 +5,14 @@
 #include "render-system/stationary-render-system.hpp"
 #include "render-system/animated-skin-render-system.hpp"
 #include "render-system/pepsiman-render-system.hpp"
+#include "SkyBox.hpp"
 
 class RoadScene : public SceneBase {
 public:
 
     std::string pepsimanId = "pepsiman";
     std::string followerId = "can";
+    SkyBox skybox = SkyBox();
 
     RoadScene(std::string pId, std::string worldFile) :
             SceneBase(pId, worldFile) {
@@ -31,6 +33,10 @@ public:
             poolSizes.texturesInPool += system->getPoolSizes().texturesInPool;
             poolSizes.setsInPool += system->getPoolSizes().setsInPool;
         }
+
+        poolSizes.uniformBlocksInPool += skybox.getPoolSizes().uniformBlocksInPool;
+        poolSizes.texturesInPool += skybox.getPoolSizes().texturesInPool;
+        poolSizes.setsInPool += skybox.getPoolSizes().setsInPool;
         return poolSizes;
     }
 
@@ -89,22 +95,50 @@ public:
     void localInit() override {
         setWorld();
         setLight();
+        skybox.setModel("assets/models/Sphere.obj", ModelType::OBJ);
+//        skybox.setCubeMapTexture({
+//                                         "assets/textures/skybox/Citadella2/posx.jpg",
+//                                         "assets/textures/skybox/Citadella2/negx.jpg",
+//                                         "assets/textures/skybox/Citadella2/posy.jpg",
+//                                         "assets/textures/skybox/Citadella2/negy.jpg",
+//                                         "assets/textures/skybox/Citadella2/posz.jpg",
+//                                         "assets/textures/skybox/Citadella2/negz.jpg"
+//                                 });
+        skybox.setBaseTexture("assets/textures/skybox/GLAST.0272.jpg");
+        skybox.init(BP, camera);
         for (auto [id, s]: skins) {
             s->updateJointMatrices();
         }
 
     }
 
-    void updateUniformBuffer(uint32_t currentImage, UserInput userInput) override {
-        for (auto [id, s]: skins) {
-            s->update(BP->frameTime, false);
-        }
+    bool pause = true;
+
+    void updateUniformBuffer(uint32_t currentImage, UserInput userInput)
+    override {
 
         if (userInput.key == GLFW_KEY_B) {
             this->sceneLoader.readJson();
             setWorld();
             setCamera(userInput.aspectRatio);
             this->setLight();
+            setGame();
+        }
+        if (userInput.key == GLFW_KEY_P) {
+            pause = false;
+        }
+        if (userInput.key == GLFW_KEY_O) {
+            pause = true;
+        }
+
+        if (userInput.key == GLFW_KEY_0) {
+            skins[pepsimanId]->setTranslation(glm::vec3(0.0f, 0.0f, 0.0f));
+        }
+
+
+        if (!pause) {
+            skins[pepsimanId]->move(glm::vec3(0, -gameConfig.heroSpeed, 0));
+            skins[pepsimanId]->update(BP->frameTime * gameConfig.heroAnimationSpeed, false);
         }
 
         camera->rotate(-userInput.rotation.y * userInput.deltaTime, -userInput.rotation.x * userInput.deltaTime,
@@ -113,6 +147,7 @@ public:
         camera->updateWorld();
         camera->updateViewMatrix();
         updateRenderSystems(currentImage);
+        skybox.render(currentImage);
     }
 
     void updateRenderSystems(uint32_t currentImage) {
@@ -135,7 +170,8 @@ public:
         }
     }
 
-    void pipelinesAndDescriptorSetsInit() override {
+    void pipelinesAndDescriptorSetsInit()
+    override {
         for (auto [id, system]: pepsimanRenderSystems) {
             system->pipelinesAndDescriptorSetsInit();
         }
@@ -143,18 +179,23 @@ public:
         for (auto [id, system]: stationaryRenderSystems) {
             system->pipelinesAndDescriptorSetsInit();
         }
+
+        skybox.pipelinesAndDescriptorSetsInit();
     }
 
-    void pipelinesAndDescriptorSetsCleanup() override {
+    void pipelinesAndDescriptorSetsCleanup()
+    override {
         for (auto [id, system]: pepsimanRenderSystems) {
             system->pipelinesAndDescriptorSetsCleanup();
         }
         for (auto [id, system]: stationaryRenderSystems) {
             system->pipelinesAndDescriptorSetsCleanup();
         }
+        skybox.pipelinesAndDescriptorSetsCleanup();
     }
 
-    void localCleanup() override {
+    void localCleanup()
+    override {
 
         for (auto [id, system]: pepsimanRenderSystems) {
             system->cleanup();
@@ -162,14 +203,18 @@ public:
         for (auto [id, system]: stationaryRenderSystems) {
             system->cleanup();
         }
+
+        skybox.localCleanup();
     }
 
-    void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) override {
+    void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage)
+    override {
         for (auto [id, system]: pepsimanRenderSystems) {
             system->populateCommandBuffer(commandBuffer, currentImage);
         }
         for (auto [id, system]: stationaryRenderSystems) {
             system->populateCommandBuffer(commandBuffer, currentImage);
         }
+        skybox.populateCommandBuffer(commandBuffer, currentImage);
     }
 };

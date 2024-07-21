@@ -56,9 +56,10 @@ public:
 
     PoolSizes getPoolSizes() override {
         PoolSizes poolSizes = {};
-        poolSizes.uniformBlocksInPool = 3; // 1 for model, 1 for camera, 1 for light
-        poolSizes.texturesInPool = 1; // 1 for base texture
-        poolSizes.setsInPool = 2; // 1 for model, 1 for camera and light
+        auto basePoolSizes = getBasePoolSizes();
+        poolSizes.uniformBlocksInPool = 1 + basePoolSizes.uniformBlocksInPool;
+        poolSizes.texturesInPool = 1 + basePoolSizes.texturesInPool;; // 1 for base texture
+        poolSizes.setsInPool = 1 + basePoolSizes.setsInPool;; // 1 for model, 1 for camera and light
         return poolSizes;
     }
 
@@ -76,15 +77,15 @@ public:
 
 
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) override {
-        std::cout << "AnimatedSkinRenderSystem: Populating command buffer" << std::endl;
+
         P.bind(commandBuffer);
         DS.bind(commandBuffer, P, SET_ID, currentImage);
-        std::cout << "AnimatedSkinRenderSystem: binding ds: " << SET_ID << std::endl;
+
         GDS.bind(commandBuffer, P, GLOBAL_SET_ID, currentImage);
-        std::cout << "AnimatedSkinRenderSystem: binding GDS: " << GLOBAL_SET_ID << std::endl;
+
 
         bindVertexBuffers(commandBuffer);
-        std::cout << "AnimatedSkinRenderSystem: binding vertex buffers" << std::endl;
+
     }
 
     void updateUniformBuffers(uint32_t currentImage, AnimatedSkinRenderSystemData data) override {
@@ -99,9 +100,14 @@ public:
         CameraUniformBuffer cameraUBO{};
         cameraUBO.view = camera->matrices.view;
         cameraUBO.projection = camera->matrices.perspective;
+        cameraUBO.position = camera->CamPosition;
         GDS.map((int) currentImage, &cameraUBO, (int) CAMERA_DATA_BINDING);
-        LightUnifromBufferObject lightUBO = light->getUBO();
+        LightUniformBuffer lightUBO{};
+        lightUBO.position = light->lightInfo.position;
+        lightUBO.direction = light->lightInfo.direction;
+        lightUBO.color = light->lightInfo.color;
         GDS.map((int) currentImage, &lightUBO, (int) LIGHT_DATA_BINDING);
+        updateAmbient(currentImage);
     }
 
 protected:

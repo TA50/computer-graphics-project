@@ -14,6 +14,7 @@ enum RenderType {
     SKYBOX,
     ANIMATED_SKIN,
     PEPSIMAN,
+    METTALIC
 };
 
 

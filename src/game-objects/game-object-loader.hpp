@@ -347,6 +347,20 @@ public:
                     exit(EXIT_FAILURE);
                 }
 
+                auto utan = primitive.attributes.find("TANGENT");
+                if (utan != primitive.attributes.end()) {
+                    const tinygltf::Accessor &tanAcessor = model.accessors[utan->second];
+                    const tinygltf::BufferView &tanViw = model.bufferViews[tanAcessor.bufferView];
+                    bufferTangents = reinterpret_cast<const float *>(&(model.buffers[tanViw.buffer].data[
+                            tanAcessor.byteOffset + tanViw.byteOffset]));
+                    meshHasTan = true;
+                    cntTan = tanAcessor.count;
+                    if (cntTan > cntTot) cntTot = cntTan;
+                } else {
+                    std::cout << "Warning: vertex layout has TANGENT, but file hasn't\n";
+//                    exit(EXIT_FAILURE);
+                }
+
 
                 for (int i = 0; i < cntTot; i++) {
                     GameObjectVertex vertex{};
@@ -369,10 +383,21 @@ public:
                     }
 
                     if ((i < cntUV) && meshHasUV) {
-                        vertex.uv = {
+                        glm::vec2 texCoord = {
                                 bufferTexCoords[2 * i + 0],
                                 bufferTexCoords[2 * i + 1]
                         };
+                        vertex.uv = texCoord;
+                    }
+                    if ((i < cntTan) && meshHasTan) {
+                        glm::vec4 tangent = {
+                                bufferTangents[4 * i + 0],
+                                bufferTangents[4 * i + 1],
+                                bufferTangents[4 * i + 2],
+                                bufferTangents[4 * i + 3]
+                        };
+
+                        vertex.tangent = tangent;
                     }
 
                     result.vertices.push_back(vertex);

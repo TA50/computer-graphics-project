@@ -12,7 +12,6 @@
 
 #include "game-objects/game-object-base.hpp"
 #include "game-objects/gltf-skin-base.hpp"
-#include "game-objects/multi-mesh-game-object.hpp"
 #include "game-objects/game-object-loader.hpp"
 
 class SceneLoader {
@@ -22,6 +21,7 @@ public:
             {"moving",        MOVING},
             {"animated-skin", ANIMATED_SKIN},
             {"pepsiman",      PEPSIMAN},
+            {"metallic",      METTALIC},
     };
 
     SceneLoader(std::string path) : filename(path) {
@@ -47,49 +47,6 @@ public:
         catch (nlohmann::json::parse_error &e) {
             std::cerr << "JSON parse error: " << e.what() << std::endl;
             throw e;
-        }
-    }
-
-    MultiMeshGameObject *loadMultiMesh(std::string key, nlohmann::json gameObjectData) {
-        auto gameObject = new MultiMeshGameObject(key);
-        std::string modelPath = gameObjectData["modelPath"];
-        std::string texturesFolder = gameObjectData["texturesFolder"];
-        std::string modelType = gameObjectData["modelType"];
-        std::string renderType = gameObjectData["renderType"];
-//        auto textureInfo = loadTextures(textures);
-//        for (auto &t: textureInfo) {
-//            gameObject->addTexture(t.first, t.second);
-//        }
-        auto result = GameObjectLoader::loadGltfMulti(modelPath);
-
-        for (auto m: result.meshes) {
-            auto go = new GameObjectBase(m.name);
-            go->vertices = m.vertices;
-            go->indices = m.indices;
-            TextureInfo textureInfo{};
-            textureInfo.path = "assets/textures/textures.png";
-            textureInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-            textureInfo.initSampler = true;
-
-            go->addTexture("base", textureInfo);
-            go->renderType = renderTypes[renderType];
-            gameObject->addMesh(go);
-        }
-        return gameObject;
-    }
-
-    std::unordered_map<std::string, MultiMeshGameObject *> loadMultiMeshGameObjects() {
-        if (jsonData.contains("multi-mesh")) {
-            nlohmann::json gameObjectsData = jsonData["multi-mesh"];
-            std::unordered_map<std::string, MultiMeshGameObject *> gameObjectsMap;
-            for (nlohmann::json::iterator it = gameObjectsData.begin(); it != gameObjectsData.end(); ++it) {
-                std::cout << "Loading game object: " << it.key() << std::endl;
-                gameObjectsMap[it.key()] = loadMultiMesh(it.key(), it.value());
-            }
-            return gameObjectsMap;
-        } else {
-            std::cout << "No multi-mesh game objects found in json" << std::endl;
-            return {};
         }
     }
 

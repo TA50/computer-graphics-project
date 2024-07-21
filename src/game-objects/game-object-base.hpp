@@ -65,20 +65,25 @@ public:
     }
 
     virtual glm::mat4 getModel() {
+        glm::mat4 M = LocalMatrix;
+        auto S = glm::scale(glm::mat4(1), scaling);
+        auto T = glm::translate(glm::mat4(1), translation);
+        auto Ry = glm::rotate(glm::mat4(1), glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+        auto Rx = glm::rotate(glm::mat4(1), glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+        auto Rz = glm::rotate(glm::mat4(1), glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
-        auto M = LocalMatrix;
-
-        auto model = glm::scale(M, scaling);
-
-        model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-        model = glm::translate(model, translation);
-
-        return model;
+        return M * T * Ry * Rx * Rz * S;
     }
 
+    void move(glm::vec3 direction) {
+        translation += direction;
+    }
+    void scale(glm::vec3 s) {
+        scaling = s;
+    }
+    void rotate(glm::vec3 degrees) {
+        rotation += degrees;
+    }
     std::vector<GameObjectVertex> vertices;
     std::vector<uint32_t> indices;
     std::unordered_map<std::string, TextureInfo> textures;

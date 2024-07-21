@@ -34,7 +34,7 @@ public:
 
         CamYaw = (CamYaw < 0.0f ? 0.0f : CamYaw);
         // 180
-        CamYaw = (CamYaw > M_PI ? M_PI : CamYaw);
+        CamYaw = (CamYaw > 2 *M_PI ? 2 *M_PI : CamYaw);
 
     }
 

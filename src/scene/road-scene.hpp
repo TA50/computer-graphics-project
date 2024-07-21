@@ -4,6 +4,7 @@
 #include "game-objects/game-object-base.hpp"
 #include "render-system/stationary-render-system.hpp"
 #include "render-system/animated-skin-render-system.hpp"
+#include "render-system/metallic-render-system.hpp"
 #include "render-system/pepsiman-render-system.hpp"
 #include "SkyBox.hpp"
 
@@ -20,6 +21,7 @@ public:
 
     std::unordered_map<std::string, PepsimanRenderSystem *> pepsimanRenderSystems;
     std::unordered_map<std::string, StationaryRenderSystem *> stationaryRenderSystems;
+    std::unordered_map<std::string, MetallicRenderSystem *> mettalicRenderSystems;
 
     PoolSizes getPoolSizes() override {
         PoolSizes poolSizes;
@@ -29,6 +31,11 @@ public:
             poolSizes.setsInPool += system->getPoolSizes().setsInPool;
         }
         for (auto [id, system]: stationaryRenderSystems) {
+            poolSizes.uniformBlocksInPool += system->getPoolSizes().uniformBlocksInPool;
+            poolSizes.texturesInPool += system->getPoolSizes().texturesInPool;
+            poolSizes.setsInPool += system->getPoolSizes().setsInPool;
+        }
+        for (auto [id, system]: mettalicRenderSystems) {
             poolSizes.uniformBlocksInPool += system->getPoolSizes().uniformBlocksInPool;
             poolSizes.texturesInPool += system->getPoolSizes().texturesInPool;
             poolSizes.setsInPool += system->getPoolSizes().setsInPool;
@@ -47,6 +54,11 @@ public:
         for (auto [id, system]: stationaryRenderSystems) {
             system->init(BP, camera, light);
         }
+
+        for (auto [id, system]: mettalicRenderSystems) {
+            system->init(BP, camera, light);
+        }
+
     }
 
     void createRenderSystems() override {
@@ -88,6 +100,21 @@ public:
                 renderSystem->setTextures(go->textures);
                 stationaryRenderSystems[id] = renderSystem;
             }
+            if (go->renderType == METTALIC) {
+                auto renderSystem = new MetallicRenderSystem(id);
+                std::vector<MetallicSystemVertex> vertices;
+                for (auto v: go->vertices) {
+                    MetallicSystemVertex vertex;
+                    vertex.pos = v.pos;
+                    vertex.normal = v.normal;
+                    vertex.uv = v.uv;
+                    vertex.tangent = v.tangent;
+                    vertices.push_back(vertex);
+                }
+                renderSystem->addVertices(vertices, go->indices);
+                renderSystem->setTextures(go->textures);
+                mettalicRenderSystems[id] = renderSystem;
+            }
         }
     }
 
@@ -123,6 +150,7 @@ public:
             setCamera(userInput.aspectRatio);
             this->setLight();
             setGame();
+            skins[pepsimanId]->setTranslation(glm::vec3(0.0f, 0.0f, 0.0f));
         }
         if (userInput.key == GLFW_KEY_P) {
             pause = false;
@@ -131,15 +159,15 @@ public:
             pause = true;
         }
 
-        if (userInput.key == GLFW_KEY_0) {
-            skins[pepsimanId]->setTranslation(glm::vec3(0.0f, 0.0f, 0.0f));
-        }
-
 
         if (!pause) {
             skins[pepsimanId]->move(glm::vec3(0, -gameConfig.heroSpeed, 0));
             skins[pepsimanId]->update(BP->frameTime * gameConfig.heroAnimationSpeed, false);
+            gameObjects[followerId]->rotate(glm::vec3(0, 0, gameConfig.villainAnimationSpeed));
+            gameObjects[followerId]->move(glm::vec3(0, 0, gameConfig.villainSpeed));
+
         }
+
 
         camera->rotate(-userInput.rotation.y * userInput.deltaTime, -userInput.rotation.x * userInput.deltaTime,
                        -userInput.rotation.z * userInput.deltaTime);
@@ -168,6 +196,13 @@ public:
                     go->getModel()
             });
         }
+
+        for (auto [id, system]: mettalicRenderSystems) {
+            auto go = gameObjects[id];
+            system->updateUniformBuffers(currentImage, {
+                    go->getModel()
+            });
+        }
     }
 
     void pipelinesAndDescriptorSetsInit()
@@ -180,6 +215,10 @@ public:
             system->pipelinesAndDescriptorSetsInit();
         }
 
+
+        for (auto [id, system]: mettalicRenderSystems) {
+            system->pipelinesAndDescriptorSetsInit();
+        }
         skybox.pipelinesAndDescriptorSetsInit();
     }
 
@@ -189,6 +228,10 @@ public:
             system->pipelinesAndDescriptorSetsCleanup();
         }
         for (auto [id, system]: stationaryRenderSystems) {
+            system->pipelinesAndDescriptorSetsCleanup();
+        }
+
+        for (auto [id, system]: mettalicRenderSystems) {
             system->pipelinesAndDescriptorSetsCleanup();
         }
         skybox.pipelinesAndDescriptorSetsCleanup();
@@ -204,6 +247,9 @@ public:
             system->cleanup();
         }
 
+        for (auto [id, system]: mettalicRenderSystems) {
+            system->cleanup();
+        }
         skybox.localCleanup();
     }
 
@@ -215,6 +261,12 @@ public:
         for (auto [id, system]: stationaryRenderSystems) {
             system->populateCommandBuffer(commandBuffer, currentImage);
         }
+
+        for (auto [id, system]: mettalicRenderSystems) {
+            system->populateCommandBuffer(commandBuffer, currentImage);
+        }
+
         skybox.populateCommandBuffer(commandBuffer, currentImage);
+
     }
 };

@@ -33,13 +33,13 @@ public:
     }
 
     void update() {
-        auto LWm = glm::translate(glm::mat4(1.0f), translation)
-                   * glm::rotate(glm::mat4(1.0f), glm::radians(rotation.x), glm::vec3(1, 0, 0))
-                   * glm::rotate(glm::mat4(1.0f), glm::radians(rotation.y), glm::vec3(0, 1, 0))
-                   * glm::rotate(glm::mat4(1.0f), glm::radians(rotation.z), glm::vec3(0, 0, 1));
+//        auto LWm = glm::translate(glm::mat4(1.0f), translation)
+//                   * glm::rotate(glm::mat4(1.0f), glm::radians(rotation.x), glm::vec3(1, 0, 0))
+//                   * glm::rotate(glm::mat4(1.0f), glm::radians(rotation.y), glm::vec3(0, 1, 0))
+//                   * glm::rotate(glm::mat4(1.0f), glm::radians(rotation.z), glm::vec3(0, 0, 1));
 
-        lightInfo.direction = LWm * glm::vec4(0, 0, 1, 0);
-        lightInfo.position = LWm * glm::vec4(0, 0, 0, 1);
+        lightInfo.direction = glm::vec3(cos(glm::radians(rotation.x)), sin(glm::radians(rotation.y)), 0);
+        lightInfo.position = translation;
         lightInfo.color = color;
     }
 

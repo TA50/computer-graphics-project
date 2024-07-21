@@ -52,6 +52,7 @@ struct GameObjectVertex {
     glm::vec3 normal;
     glm::vec2 uv;
     glm::vec4 inColor = glm::vec4(1.0f);
+    glm::vec4 tangent;
 };
 
 

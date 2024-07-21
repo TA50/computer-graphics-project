@@ -27,11 +27,15 @@ public:
         CamRoll += ROT_SPEED * rollDelta;
 
 
-//        Yaw = (Yaw < 0.0f ? 0.0f : (Yaw > 2 * M_PI ? 2 * M_PI : Yaw));
+
         CamPitch = (CamPitch < 0.0f ? 0.0f : CamPitch);
         // 180
         CamPitch = (CamPitch > M_PI ? M_PI : CamPitch);
-//        Roll = (Roll < -M_PI ? -M_PI : (Roll > M_PI ? M_PI : Roll));
+
+        CamYaw = (CamYaw < 0.0f ? 0.0f : CamYaw);
+        // 180
+        CamYaw = (CamYaw > M_PI ? M_PI : CamYaw);
+
     }
 
     void print() {

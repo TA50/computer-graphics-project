@@ -1,0 +1,11 @@
+Model Information:
+* title:	Pepsi
+* source:	https://sketchfab.com/3d-models/pepsi-281e386af50f45648143fc13388166dc
+* author:	danh11345art (https://sketchfab.com/danh11345art)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Pepsi" (https://sketchfab.com/3d-models/pepsi-281e386af50f45648143fc13388166dc) by danh11345art (https://sketchfab.com/danh11345art) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

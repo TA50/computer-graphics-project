@@ -42,7 +42,7 @@
       "near": 0.1,
       "far": 500
     },
-    "distance": 6
+    "distance": 16
   },
   "city": {
     "modelPath": "assets/models/big_city/scene.gltf",
@@ -54,13 +54,13 @@
       "z": 1
     },
     "rotate": {
-      "x": -90.15,
+      "x": -90,
       "y": -0.0,
       "z": 0.0
     },
     "translate": {
       "x": 8.0,
-      "y": 0.23,
+      "y":1.23,
       "z": 0.0
     }
   },

@@ -37,32 +37,32 @@ layout(set = 0, binding = 2) uniform AmbientUniformBufferObject{
 layout(location = 0) out vec4 fragColor;
 
 
+// Phong
+vec3 BRDF(vec3 Albedo, vec3 Norm, vec3 EyeDir, vec3 LD) {
+    vec3 Diffuse;
+    vec3 Specular;
+    Diffuse = Albedo * max(dot(Norm, LD), 0.0f);
+    Specular = vec3(pow(max(dot(EyeDir, -reflect(LD, Norm)), 0.0f), 160.0f));
 
-
-
+    return Diffuse + Specular;
+}
 void main(){
 
     vec3 Norm = normalize(fragNorm);
 
     vec3 lightDir =normalize(light.direction);
-    vec3 EyeDir = normalize(fragPos - camera.position);
+    vec3 EyeDir = normalize(camera.eyePos - fragPos);
     vec3 lightColor = light.color.rgb;
     vec4 baseColor = texture(baseTex, fragUV);
-
-    // BRDF
-    // lambart diffuse:
-    vec3 Diffuse = baseColor.rgb * max(dot(Norm, lightDir), 0.0);
-    // specular: blinn specular
-    vec3 H = normalize(lightDir + EyeDir);
-    vec3 Specular = lightColor * pow(max(dot(Norm, H), 0.0), light.specularGamma);
 
     vec3 Ambient = ((Norm.x > 0 ? ambient.cxp : ambient.cxn) * (Norm.x * Norm.x) +
     (Norm.y > 0 ? ambient.cyp : ambient.cyn) * (Norm.y * Norm.y) +
     (Norm.z > 0 ? ambient.czp : ambient.czn) * (Norm.z * Norm.z)) * baseColor.rgb;
-    // final color
-    vec3 col  = (Diffuse + Specular) * lightColor + Ambient;
-    // gamma correction
-    col = pow(col, vec3(1.0/2.2));
-    fragColor = vec4(col, 1);
+
+
+    vec3 RendEqSol = BRDF(baseColor.rgb, Norm, EyeDir, light.direction) * light.color;
+
+    RendEqSol += Ambient;
+    fragColor  = vec4(RendEqSol, 1.0);
 
 }

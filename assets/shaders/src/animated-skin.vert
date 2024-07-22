@@ -44,8 +44,7 @@ void main() {
     mat4 skinMat = calcSkinMat();
     mat4 viewModel = cubo.view * ubo.model;
     gl_Position = cubo.projection * viewModel * skinMat * vec4(inPosition.xyz, 1.0);
-
-    fragNorm = normalize(transpose(inverse(mat3(viewModel * skinMat))) * inNormal);
+    fragNorm = mat3(ubo.model ) *inNormal;
     fragPos = vec3(ubo.model * vec4(inPosition, 1.0));
     fragUV = inUV;
     fragTan = vec4((mat4(1) * vec4(inTan.xyz, 0.0)).xyz, inTan.w);

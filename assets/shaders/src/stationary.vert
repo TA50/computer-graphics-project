@@ -27,6 +27,6 @@ void main(){
     mat4 mvp = cubo.proj * cubo.view * mubo.model;
     gl_Position = mvp* vec4(inPosition, 1.0);
     fragPos = vec3(mubo.model * vec4(inPosition, 1.0));
-    fragNorm = mat3(transpose(inverse(mubo.model))) * inNorm;
+    fragNorm = mat3(mubo.model) * inNorm;
     fragUV = inUV;
 }

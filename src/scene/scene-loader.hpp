@@ -251,10 +251,18 @@ public:
         translation.z = jsonData[key]["translate"]["z"];
 
         glm::vec3 rotation = glm::vec3(0);
-        rotation.x = jsonData[key]["rotate"]["x"];
-        rotation.y = jsonData[key]["rotate"]["y"];
-        rotation.z = 0;
-
+        if (jsonData[key].contains("rotate")) {
+            rotation.x = jsonData[key]["rotate"]["x"];
+            rotation.y = jsonData[key]["rotate"]["y"];
+            rotation.z = 0;
+        }
+        auto Q = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+        if (jsonData[key].contains("quaternion")) {
+            Q = glm::quat(jsonData[key]["quaternion"][3],
+                          jsonData[key]["quaternion"][0],
+                          jsonData[key]["quaternion"][1],
+                          jsonData[key]["quaternion"][2]);
+        }
 
         glm::vec4 color = glm::vec4(1.0f);
         color.r = jsonData[key]["color"]["r"];
@@ -262,10 +270,8 @@ public:
         color.b = jsonData[key]["color"]["b"];
         color.a = jsonData[key]["color"]["a"];
         light->setTranslation(translation);
-        light->setRotation(rotation);
         light->setColor(color);
-
-
+        light->setRotation(Q);
 
         // gamma
         if (jsonData[key].contains("specularGamma")) {

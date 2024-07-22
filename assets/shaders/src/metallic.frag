@@ -132,6 +132,7 @@ void main() {
 
     // Apply gamma correction
     //    finalColor = finalColor * 2.0;
+
     finalColor = reinhardToneMapping(finalColor);
     finalColor = pow(finalColor, vec3(1.0 / 2.2));
     FragColor = vec4(finalColor, 1.0);

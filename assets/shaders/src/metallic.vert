@@ -27,7 +27,7 @@ void main()
     vec4 worldPos =  mubo.model * vec4(aPos, 1.0);
     FragPos = worldPos.xyz;
 
-    vec3 normal = normalize(mat3(mubo.model ) * aNormal);
+    vec3 normal = mat3(mubo.model) * aNormal;
     vec3 tangent = normalize(mat3(mubo.model ) * aTangent);
     vec3 bitangent = cross(normal, tangent);
     TBN = mat3(tangent, bitangent, normal);

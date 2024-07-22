@@ -77,7 +77,8 @@ public:
         ubo.view = camera->matrices.view;
         ubo.projection = camera->matrices.perspective;
         ubo.position = camera->CamPosition;
-        ubo.eyePos = glm::inverse(camera->matrices.view) * glm::vec4(0, 0, 0, 1);
+//        ubo.eyePos = glm::inverse(camera->matrices.view) * glm::vec4(0, 0, 0, 1);
+        ubo.eyePos  =camera->CamPosition;;
         GDS.map(currentImage, &ubo, CAMERA_DATA_BINDING);
 
         LightUniformBuffer lightUBO{};

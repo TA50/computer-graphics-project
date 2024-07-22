@@ -3,10 +3,11 @@
     "heroSpeed": 20,
     "villainSpeed": 0.2,
     "villainAnimationSpeed": 10,
-    "heroAnimationSpeed": 1,"heroRotationSpeed": 20
+    "heroAnimationSpeed": 1,
+    "heroRotationSpeed": 20
   },
   "light": {
-    "specularGamma": 260,
+    "specularGamma": 200,
     "color": {
       "r": 1,
       "g": 1,
@@ -14,14 +15,20 @@
       "a": 1
     },
     "translate": {
-      "x": 0,
-      "y": 20,
-      "z": 0
+      "x": 3.6413424015045166,
+      "y": 3.3561453819274902,
+      "z": 1.1169260740280151
     },
     "rotate": {
       "x": 156.074,
       "y": 23.3487
     },
+    "quaternion": [
+      -0.3960249125957489,
+      0.1478610783815384,
+      -0.1478610783815384,
+      0.8941132426261902
+    ],
     "ambient": {
       "cxp": {
         "r": 0.596,

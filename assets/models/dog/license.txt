@@ -1,0 +1,8 @@
+Model Information:
+* title:	Dog
+* source:	https://sketchfab.com/3d-models/dog-415a0951b0d148c79ff6277b3f527760
+* author:	stylo0 (https://sketchfab.com/stylo0)
+
+Model License:
+* license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
+* requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works

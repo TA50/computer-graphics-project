@@ -1,7 +1,6 @@
 #pragma once
 
 #include "modules/Starter.hpp"
-#include "camera.hpp"
 #include "common.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -122,7 +121,7 @@ public:
         auto Rx = glm::rotate(glm::mat4(1), glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
         auto Rz = glm::rotate(glm::mat4(1), glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
-        return  T * Ry * Rx * Rz * S * LocalMatrix ;
+        return T * Ry * Rx * Rz * S * LocalMatrix;
     }
 
     // skinning
@@ -133,6 +132,7 @@ public:
 
     void setActiveAnimation(uint32_t index) {
         activeAnimation = index;
+        updateJointMatrices();
     }
 
 
@@ -154,6 +154,7 @@ public:
     }
 
     void update(float deltaTime, bool pause = true) {
+
         if (!pause) {
             updateAnimation(deltaTime);
         }

@@ -6,10 +6,25 @@
 #include "render-system/animated-skin-render-system.hpp"
 #include "printer.hpp"
 
+/**
+ * Dog Animations:
+ * 0 - attack
+ * 1 - iddle
+ * 2 - jump
+ * 3 - run
+ * 4 - walk
+ * 5 - walksent
+ */
 class CityScene : public SceneBase {
 public:
 
-    std::string walkingCharacterId = "man";
+    std::string walkingCharacterId = "walking-character";
+    const int ATTACK_ANIMATION = 0;
+    const int IDLE_ANIMATION = 1;
+    const int JUMP_ANIMATION = 2;
+    const int RUN_ANIMATION = 3;
+    const int WALK_ANIMATION = 4;
+    const int WALKSENT_ANIMATION = 5;
 
     CityScene(std::string pId, std::string worldFile) :
             SceneBase(pId, worldFile) {
@@ -164,17 +179,17 @@ public:
             s->updateJointMatrices();
         }
 
+
         setCity();
 
     }
 
-    bool pause = true;
-    float lookAng = 0;
-
+    bool pause = false;
+    float lookAng = 180;
 
     void updateUniformBuffer(uint32_t currentImage, UserInput userInput) override {
-
         auto walkingCharacter = skins[walkingCharacterId];
+        walkingCharacter->setActiveAnimation(IDLE_ANIMATION);
 
         if (userInput.key == GLFW_KEY_P) {
             pause = true;
@@ -189,25 +204,38 @@ public:
             walkingCharacter->setRotation(glm::vec3(0, 0, 0));
         }
         if (!pause) {
-            auto m = glm::vec3(1);
-            m.x = userInput.axis.x;
-            m.y = userInput.axis.z;
-            m.z = 0;
-            lookAng -= m.x * gameConfig.heroRotationSpeed * userInput.deltaTime;
-            auto movingDirection = glm::vec3(0, m.y, 0);
+            if (userInput.key == GLFW_KEY_X) {
+                walkingCharacter->setActiveAnimation(JUMP_ANIMATION);
+            } else if (userInput.key == GLFW_KEY_C) {
+                walkingCharacter->setActiveAnimation(ATTACK_ANIMATION);
+            } else {
 
-            auto R = glm::rotate(glm::mat4(1), glm::radians(lookAng), glm::vec3(0, 0, 1));
-            Printer::printArrArr(R);
-            auto transformedMovingDir = R * glm::vec4(movingDirection, 1);
-            movingDirection.x = transformedMovingDir.x;
-            movingDirection.y = transformedMovingDir.y;
-            walkingCharacter->setRotation(glm::vec3(0, 0, lookAng));
-            walkingCharacter->move(movingDirection * gameConfig.heroSpeed * userInput.deltaTime);
-            for (auto [id, s]: skins) {
-                s->update(BP->frameTime * gameConfig.heroAnimationSpeed, pause);
+
+                auto m = glm::vec3(1);
+                m.x = userInput.axis.x;
+                m.y = 0;
+                m.z = userInput.axis.z;
+
+                lookAng -= m.x * gameConfig.heroRotationSpeed * userInput.deltaTime;
+                auto movingDirection = glm::vec3(0, 0, m.z);
+
+                auto R = glm::rotate(glm::mat4(1), glm::radians(lookAng), glm::vec3(0, 1, 0));
+                auto transformedMovingDir = R * glm::vec4(movingDirection, 1);
+                movingDirection.x = transformedMovingDir.x;
+                movingDirection.y = transformedMovingDir.y;
+                movingDirection.z = transformedMovingDir.z;
+                walkingCharacter->setRotation(glm::vec3(0, lookAng, 0));
+                if (m.z != 0 || m.x != 0) {
+                    walkingCharacter->setActiveAnimation(WALK_ANIMATION);
+                    walkingCharacter->move(movingDirection * gameConfig.heroSpeed * userInput.deltaTime);
+                }
+
             }
         }
 
+        for (auto [id, s]: skins) {
+            s->update(BP->frameTime * gameConfig.heroAnimationSpeed, pause);
+        }
 
         if (userInput.key == GLFW_KEY_B) {
             this->sceneLoader.readJson();
@@ -241,13 +269,7 @@ public:
             auto jointMatrices = skin->getJointMatrices();
 
             AnimatedSkinRenderSystemData data{};
-            if (id == walkingCharacterId) {
-                data.model = skin->getModel() * camera->matrices.world;
-                auto pos = data.model[3];
-            } else {
-                data.model = skin->getModel();
-
-            }
+            data.model = skin->getModel();
             for (auto [jointIndex, jointMatrix]: jointMatrices) {
                 data.jointTransformMatrices[jointIndex] = jointMatrix;
             }

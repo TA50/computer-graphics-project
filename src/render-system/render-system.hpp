@@ -10,6 +10,7 @@ struct CameraUniformBuffer {
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 projection;
     alignas(16) glm::vec3 position;
+    alignas(16) glm::vec3 eyePos;
 };
 
 struct LightUniformBuffer {
@@ -71,7 +72,25 @@ public:
 
 
     virtual void updateUniformBuffers(uint32_t currentImage, TRenderSystemData ubo) = 0;
+    void updateGlobalBuffers(uint32_t currentImage){
+        CameraUniformBuffer ubo{};
+        ubo.view = camera->matrices.view;
+        ubo.projection = camera->matrices.perspective;
+        ubo.position = camera->CamPosition;
+        ubo.eyePos = glm::inverse(camera->matrices.view) * glm::vec4(0, 0, 0, 1);
+        GDS.map(currentImage, &ubo, CAMERA_DATA_BINDING);
 
+        LightUniformBuffer lightUBO{};
+        lightUBO.position = light->lightInfo.position;
+        lightUBO.direction = light->lightInfo.direction;
+        lightUBO.color = light->lightInfo.color;
+        lightUBO.specularGamma = light->specularGamma;
+        GDS.map(currentImage, &lightUBO, LIGHT_DATA_BINDING);
+
+
+
+        updateAmbient(currentImage);
+    }
     std::string getId() {
         return id;
     }

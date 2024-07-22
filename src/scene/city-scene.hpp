@@ -164,6 +164,7 @@ public:
                     vertex.jointIndices = v.jointIndices;
                     vertex.jointWeights = v.jointWeights;
                     vertex.inColor = v.inColor;
+                    vertex.inTan = v.tangent;
                     vertices.push_back(vertex);
                 }
                 renderSystem->addVertices(vertices, skin->indices);

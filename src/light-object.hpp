@@ -33,8 +33,8 @@ public:
     }
 
     void update() {
-        float yaw = glm::radians(rotation.y);
         float pitch = glm::radians(rotation.x);
+        float yaw = glm::radians(rotation.y);
         glm::vec3 direction;
         direction.x = cos(pitch) * cos(yaw);
         direction.y = sin(pitch);

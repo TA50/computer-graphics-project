@@ -22,6 +22,7 @@ struct AnimatedSkinSystemVertex {
     glm::ivec4 jointIndices;
     glm::vec4 jointWeights;
     glm::vec3 inColor;
+    glm::vec4 inTan;
 
     static std::vector<VertexBindingDescriptorElement> getBindingDescription() {
         return {
@@ -45,6 +46,8 @@ struct AnimatedSkinSystemVertex {
 
                 {0, 5, VK_FORMAT_R32G32B32_SFLOAT,    static_cast<uint32_t >(offsetof(AnimatedSkinSystemVertex,
                                                                                       inColor)),      sizeof(glm::vec3), COLOR},
+                {0, 6, VK_FORMAT_R32G32B32A32_SFLOAT, static_cast<uint32_t >(offsetof(AnimatedSkinSystemVertex,
+                                                                                      inTan)),        sizeof(glm::vec4), TANGENT},
 
         };
     }
@@ -65,7 +68,7 @@ public:
 
     void pipelinesAndDescriptorSetsInit() override {
         P.create();
-        DS.init(BP, &DSL, {&BaseTexture});
+        DS.init(BP, &DSL, {&BaseTexture, &NormalTexture});
         GDS.init(BP, &GDSL, {});
     }
 
@@ -96,18 +99,7 @@ public:
         }
 
         DS.map((int) currentImage, &ubo, MODEL_DATA_BINDING);
-
-        CameraUniformBuffer cameraUBO{};
-        cameraUBO.view = camera->matrices.view;
-        cameraUBO.projection = camera->matrices.perspective;
-        cameraUBO.position = camera->CamPosition;
-        GDS.map((int) currentImage, &cameraUBO, (int) CAMERA_DATA_BINDING);
-        LightUniformBuffer lightUBO{};
-        lightUBO.position = light->lightInfo.position;
-        lightUBO.direction = light->lightInfo.direction;
-        lightUBO.color = light->lightInfo.color;
-        GDS.map((int) currentImage, &lightUBO, (int) LIGHT_DATA_BINDING);
-        updateAmbient(currentImage);
+        updateGlobalBuffers(currentImage);
     }
 
 protected:
@@ -118,6 +110,7 @@ protected:
         P.destroy();
         DSL.cleanup();
         BaseTexture.cleanup();
+        NormalTexture.cleanup();
     }
 
     void localInit() override {
@@ -129,6 +122,7 @@ protected:
                 {MODEL_DATA_BINDING,   VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS,
                                                                                                                 sizeof(AnimatedSkinUniformBufferObject), 1},
                 {BASE_TEXTURE_BINDING, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,                                       1},
+                {NORMAL_TEXTURE_BINDING, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1,                                       1}
         });
 
         P.init(BP, &VD, VERT_SHADER, FRAG_SHADER, {&GDSL, &DSL});
@@ -151,8 +145,10 @@ private:
     int GLOBAL_SET_ID = 0;
     uint32_t MODEL_DATA_BINDING = 0;
     uint32_t BASE_TEXTURE_BINDING = 1;
+    uint32_t NORMAL_TEXTURE_BINDING = 2;
 
     Texture BaseTexture;
+    Texture NormalTexture;
 
     void initTextures() {
         // Check if the key exists
@@ -161,6 +157,12 @@ private:
             BaseTexture.init(BP, base.path, base.format, base.initSampler);
         } else {
             throw std::runtime_error("AnimatedSkinRenderSystem: Texture with key 'base' not found.");
+        }
+        if (texturesInfo.find("normal") != texturesInfo.end()) {
+            TextureInfo base = texturesInfo["normal"];
+            NormalTexture.init(BP, base.path, base.format, base.initSampler);
+        } else {
+            throw std::runtime_error("AnimatedSkinRenderSystem: Texture with key 'normal' not found.");
         }
 
     }

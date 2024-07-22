@@ -27,10 +27,9 @@ protected:
 
 
     std::unordered_map<int, SceneBase *> scenes = {
-            {GLFW_KEY_2, cityScene},
-            {GLFW_KEY_1, roadScene},
-//            {GLFW_KEY_2, onlyPepsimanScene},
-//            {GLFW_KEY_3, cityScene}
+            {GLFW_KEY_1, onlyPepsimanScene},
+            {GLFW_KEY_2, roadScene},
+            {GLFW_KEY_3, cityScene},
     };
 
     // Here you set the main application parameters
@@ -39,7 +38,7 @@ protected:
         windowHeight = 600;
         windowTitle = "App Name";
         windowResizable = GLFW_TRUE;
-        initialBackgroundColor = {0.1f, 0.1f, 0.1f, 1.0f};
+        initialBackgroundColor = {0.01f, 0.01f, 0.01f, 1.0f};
 
         Ar = (float) windowWidth / (float) windowHeight;
 

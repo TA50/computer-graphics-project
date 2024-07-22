@@ -70,14 +70,21 @@ public:
         if (userInput.key == GLFW_KEY_B) {
             this->sceneLoader.readJson();
             setWorld();
+            setCamera(userInput.aspectRatio);
             this->setLight();
         }
 
+        camera->CamTargetDelta += userInput.axis * userInput.deltaTime;
         camera->rotate(-userInput.rotation.y * userInput.deltaTime, -userInput.rotation.x * userInput.deltaTime,
                        -userInput.rotation.z * userInput.deltaTime);
+
+//        camera->move(userInput.axis.z * userInput.deltaTime);
+//        camera->fov += userInput.axis.x * userInput.deltaTime;
+
         camera->lookAt(skins["pepsiman"]->getPosition());
         camera->updateWorld();
         camera->updateViewMatrix();
+        camera->updatePerspective();
         updateRenderSystems(currentImage);
     }
 

@@ -93,19 +93,7 @@ public:
         DS.map((int) currentImage, &ubo, MODEL_DATA_BINDING);
 
 
-        CameraUniformBuffer cameraUBO{};
-        cameraUBO.view = camera->matrices.view;
-        cameraUBO.projection = camera->matrices.perspective;
-        cameraUBO.position = camera->CamPosition;
-        GDS.map((int) currentImage, &cameraUBO, (int) CAMERA_DATA_BINDING);
-        LightUniformBuffer lightUBO{};
-        lightUBO.position = light->lightInfo.position;
-        lightUBO.direction = light->lightInfo.direction;
-        lightUBO.color = light->lightInfo.color;
-        lightUBO.specularGamma = light->specularGamma;
-
-        GDS.map((int) currentImage, &lightUBO, (int) LIGHT_DATA_BINDING);
-        updateAmbient(currentImage);
+        updateGlobalBuffers(currentImage);
     }
 
 protected:

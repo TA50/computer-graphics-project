@@ -6,10 +6,13 @@ layout(location = 2) in vec2 inUV;
 layout(location = 3) in ivec4 inJointIndices;
 layout(location = 4) in vec4 inJointWeights;
 layout(location = 5) in vec3 inColor;
+layout(location = 6) in vec4 inTan;
+
 
 layout(location = 0) out vec3 fragPos;
 layout(location = 1) out vec3 fragNorm;
 layout(location = 2) out vec2 fragUV;
+layout(location = 3) out vec4 fragTan;
 
 
 layout(set = 1, binding = 0) uniform ModelUniformBufferObject {
@@ -21,6 +24,7 @@ layout(set = 0, binding = 0) uniform LightUniformBufferObject{
     mat4 view;
     mat4 projection;
     vec3 position;
+    vec3 eyePos;
 } cubo;
 
 
@@ -44,5 +48,6 @@ void main() {
     fragNorm = normalize(transpose(inverse(mat3(viewModel * skinMat))) * inNormal);
     fragPos = vec3(ubo.model * vec4(inPosition, 1.0));
     fragUV = inUV;
+    fragTan = vec4((mat4(1) * vec4(inTan.xyz, 0.0)).xyz, inTan.w);
 
 }

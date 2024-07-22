@@ -1,25 +1,17 @@
 {
   "game": {
-    "heroSpeed": 1,
+    "heroSpeed": 2,
     "villainSpeed": 0.5,
     "villainAnimationSpeed": 3,
     "heroAnimationSpeed": 1,
     "heroRotationSpeed": 100
   },
   "light": {
-    "ang1": 135.0,
-    "ang2": 45.0,
-    "ang3": 0.0,
     "color": {
       "r": 0.3,
       "g": 0.3,
       "b": 0.3,
       "a": 1
-    },
-    "position": {
-      "x": 0,
-      "y": 0,
-      "z": 0
     },
     "translate": {
       "x": 0,
@@ -30,6 +22,38 @@
       "x": 90,
       "y": 90,
       "z": 0
+    },
+    "ambient": {
+      "cxp": {
+        "r": 0.1,
+        "g": 0.2,
+        "b": 0.2
+      },
+      "cxn": {
+        "r": 0.01,
+        "g": 0.02,
+        "b": 0.04
+      },
+      "cyp": {
+        "r": 0.1,
+        "g": 0.2,
+        "b": 0.2
+      },
+      "cyn": {
+        "r": 0.1,
+        "g": 0.1,
+        "b": 0.1
+      },
+      "czp": {
+        "r": 0.1,
+        "g": 0.2,
+        "b": 0.2
+      },
+      "czn": {
+        "r": 0.1,
+        "g": 0.2,
+        "b": 0.2
+      }
     }
   },
   "camera": {
@@ -51,7 +75,7 @@
     "perspective": {
       "fov": 60,
       "near": 0.1,
-      "far": 500
+      "far": 1000
     },
     "distance": 4
   },
@@ -91,3 +115,4 @@
     }
   }
 }
+

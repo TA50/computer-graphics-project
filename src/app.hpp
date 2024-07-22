@@ -19,8 +19,7 @@ protected:
     glm::mat4 ViewMatrix;
     float Ar;
     OnlyPepsimanScene *onlyPepsimanScene = new OnlyPepsimanScene("pepsiman-only", "assets/pepsiman-alone.json");
-    TestScene *testScene = new TestScene("test-scene", "assets/test_scene.json");
-    CityScene *cityScene = new CityScene("test-scene", "assets/city_scene.json");
+    CityScene *cityScene = new CityScene("city-scene", "assets/city_scene.json");
     RoadScene *roadScene = new RoadScene("road-scene", "assets/road_scene.json");
 
     glm::vec3 CameraInitialPosition = glm::vec3(0, 2.07f, 2);
@@ -137,10 +136,7 @@ protected:
 
 
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) override {
-
-        for (auto [K, s]: scenes) {
-            s->populateCommandBuffer(commandBuffer, currentImage);
-        }
+        scenes[curScene]->populateCommandBuffer(commandBuffer, currentImage);
     }
 
 };

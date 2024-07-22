@@ -61,7 +61,7 @@ public:
         PoolSizes poolSizes = {};
         auto basePoolSizes = getBasePoolSizes();
         poolSizes.uniformBlocksInPool = 1 + basePoolSizes.uniformBlocksInPool;
-        poolSizes.texturesInPool = 1 + basePoolSizes.texturesInPool;; // 1 for base texture
+        poolSizes.texturesInPool = 2 + basePoolSizes.texturesInPool;; // 1 for base texture
         poolSizes.setsInPool = 1 + basePoolSizes.setsInPool;; // 1 for model, 1 for camera and light
         return poolSizes;
     }

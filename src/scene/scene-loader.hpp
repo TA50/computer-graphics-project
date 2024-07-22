@@ -240,6 +240,7 @@ public:
         config->villainSpeed = jsonData[key]["villainSpeed"];
         config->heroAnimationSpeed = jsonData[key]["heroAnimationSpeed"];
         config->villainAnimationSpeed = jsonData[key]["villainAnimationSpeed"];
+        config->heroRotationSpeed = jsonData[key]["heroRotationSpeed"];
     }
 
     void setLight(Light *light) {

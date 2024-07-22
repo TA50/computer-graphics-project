@@ -22,6 +22,7 @@ struct skyBoxVertex {
 
 struct GameConfig {
     float heroSpeed = 0.0f;
+    float heroRotationSpeed = 0.0f;
     float villainSpeed = 0.0f;
     float heroAnimationSpeed = 1.0f;
     float villainAnimationSpeed = 1.0f;

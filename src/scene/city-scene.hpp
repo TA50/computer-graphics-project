@@ -4,6 +4,7 @@
 #include "game-objects/game-object-base.hpp"
 #include "render-system/stationary-render-system.hpp"
 #include "render-system/animated-skin-render-system.hpp"
+#include "printer.hpp"
 
 class CityScene : public SceneBase {
 public:
@@ -168,7 +169,8 @@ public:
     }
 
     bool pause = true;
-    float ang = 180;
+    float lookAng = 0;
+
 
     void updateUniformBuffer(uint32_t currentImage, UserInput userInput) override {
 
@@ -187,27 +189,20 @@ public:
             walkingCharacter->setRotation(glm::vec3(0, 0, 0));
         }
         if (!pause) {
-            auto m = userInput.axis;
-            m.y = m.z;
+            auto m = glm::vec3(1);
+            m.x = userInput.axis.x;
+            m.y = userInput.axis.z;
             m.z = 0;
-            auto r = userInput.rotation;
-            auto deltaT = userInput.deltaTime;
-            auto MOVE_SPEED = gameConfig.heroSpeed;
-            auto x = glm::vec3(0);
-            glm::vec3 Pos  = glm::vec3(0);
-            if ((m.x != 0) || (m.y != 0)) {
-                ang = atan2(m.x, m.y);
-                if (ang < 0) {
-                    ang += 2 * glm::pi<float>();
-                }
-                if (ang > 2 * glm::pi<float>()) {
-                    ang -= 2 * glm::pi<float>();
-                }
-                Pos.y = cos(ang);
-                Pos.x = -sin(ang);
-            }
-            walkingCharacter->setRotation(glm::vec3(0, 0, -180 + glm::degrees(ang)));
-            walkingCharacter->move(Pos * MOVE_SPEED * deltaT);
+            lookAng -= m.x * gameConfig.heroRotationSpeed * userInput.deltaTime;
+            auto movingDirection = glm::vec3(0, m.y, 0);
+
+            auto R = glm::rotate(glm::mat4(1), glm::radians(lookAng), glm::vec3(0, 0, 1));
+            Printer::printArrArr(R);
+            auto transformedMovingDir = R * glm::vec4(movingDirection, 1);
+            movingDirection.x = transformedMovingDir.x;
+            movingDirection.y = transformedMovingDir.y;
+            walkingCharacter->setRotation(glm::vec3(0, 0, lookAng));
+            walkingCharacter->move(movingDirection * gameConfig.heroSpeed * userInput.deltaTime);
             for (auto [id, s]: skins) {
                 s->update(BP->frameTime * gameConfig.heroAnimationSpeed, pause);
             }

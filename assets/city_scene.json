@@ -3,16 +3,17 @@
     "heroSpeed": 700,
     "villainSpeed": 0.5,
     "villainAnimationSpeed": 3,
-    "heroAnimationSpeed": 1
+    "heroAnimationSpeed": 1,
+    "heroRotationSpeed": 100
   },
   "light": {
     "ang1": 135.0,
     "ang2": 45.0,
     "ang3": 0.0,
     "color": {
-      "r": 2,
-      "g": 2,
-      "b": 2,
+      "r": 1,
+      "g": 1,
+      "b": 1,
       "a": 1
     },
     "position": {
@@ -70,7 +71,7 @@
     },
     "translate": {
       "x": 8.0,
-      "y": 1.23,
+      "y": 1.35,
       "z": 0.0
     }
   },

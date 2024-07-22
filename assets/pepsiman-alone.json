@@ -3,7 +3,7 @@
     "heroSpeed": 50,
     "villainSpeed": 0.5,
     "villainAnimationSpeed": 3,
-    "heroAnimationSpeed": 2
+    "heroAnimationSpeed": 2,"heroRotationSpeed": 20
   },
   "light": {
     "ang1": 20.0,

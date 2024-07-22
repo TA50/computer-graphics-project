@@ -3,7 +3,7 @@
     "heroSpeed": 20,
     "villainSpeed": 0.2,
     "villainAnimationSpeed": 10,
-    "heroAnimationSpeed": 1
+    "heroAnimationSpeed": 1,"heroRotationSpeed": 20
   },
   "light": {
     "specularGamma": 260,

@@ -105,6 +105,7 @@ public:
 
         VD.cleanup();
         GDSL.cleanup();
+        localCleanup();
     }
 
     void setTextures(std::unordered_map<std::string, TextureInfo> texsInfo) {

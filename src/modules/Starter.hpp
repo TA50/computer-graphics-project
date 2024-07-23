@@ -623,9 +623,34 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 		VkDebugUtilsMessageTypeFlagsEXT messageType,
 		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
+    	const char *messageSeverityString;
+    	if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
+    		messageSeverityString = "VERBOSE";
+    	else if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+    		messageSeverityString = "INFO";
+    	else if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+    		messageSeverityString = "WARNING";
+    	else if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+    		messageSeverityString = "ERROR";
+    	else messageSeverityString = "UNKNOWN";
 
-		std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-		return VK_FALSE;
+    	const char *messageTypeString;
+    	if (messageType == VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT)
+    		messageTypeString = "GENERAL";
+    	else if (messageType == VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT)
+    		messageTypeString = "VALIDATION";
+    	else if (messageType == VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
+    		messageTypeString = "PERFORMANCE";
+    	else messageTypeString = "UNKNOWN";
+    	if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
+    		std::cout << "[VALIDATION LAYER]: " << "[" << messageSeverityString << "] [" << messageTypeString << "] " <<
+					pCallbackData->pMessage << std::endl;
+    	} else {
+    		std::cout << "[VALIDATION LAYER]: " << "[" << messageSeverityString << "] [" << messageTypeString << "] " <<
+					pCallbackData->pMessage << std::endl;
+    	}
+
+    	return VK_FALSE;
 	}
 
 	void setupDebugMessenger() {

@@ -75,8 +75,7 @@ public:
             if (!data.contains("path")) {
                 throw std::runtime_error("Texture path not found");
             }
-
-            textureInfo.path = data["path"];
+            textureInfo.path = std::string(data["path"]);
             if (data.contains("normal")) {
                 textureInfo.format = data["normal"] ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R8G8B8A8_SRGB;
             } else {

@@ -103,6 +103,8 @@ protected:
         P.destroy();
         DSL.cleanup();
         BaseTexture.cleanup();
+        NormalTexture.cleanup();
+        MetallicTexture.cleanup();
     }
 
     void localInit() override {

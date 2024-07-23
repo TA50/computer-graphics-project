@@ -84,7 +84,7 @@ public:
             const tinygltf::Accessor tangentAccessor = model.accessors[primitive.attributes.find("TANGENT")->second];
             const tinygltf::BufferView &tangentView = model.bufferViews[tangentAccessor.bufferView];
             tangentData = reinterpret_cast<const float *>(&model.buffers[tangentView.buffer].data[
-                    tangentAccessor.byteOffset + tangentView.byteOffset]);
+                tangentAccessor.byteOffset + tangentView.byteOffset]);
         }
 
 
@@ -98,15 +98,15 @@ public:
         const tinygltf::BufferView &weightView = model.bufferViews[weightAccessor.bufferView];
 
         const auto *posData = reinterpret_cast<const float *>(&model.buffers[posView.buffer].data[
-                posAccessor.byteOffset + posView.byteOffset]);
+            posAccessor.byteOffset + posView.byteOffset]);
         const auto *normalData = reinterpret_cast<const float *>(&model.buffers[normalView.buffer].data[
-                normalAccessor.byteOffset + normalView.byteOffset]);
+            normalAccessor.byteOffset + normalView.byteOffset]);
         const auto *uvData = reinterpret_cast<const float *>(&model.buffers[uvView.buffer].data[uvAccessor.byteOffset +
-                                                                                                uvView.byteOffset]);
+            uvView.byteOffset]);
         const auto *jointData = reinterpret_cast<const uint16_t *>(&model.buffers[jointView.buffer].data[
-                jointAccessor.byteOffset + jointView.byteOffset]);
+            jointAccessor.byteOffset + jointView.byteOffset]);
         const auto *weightData = reinterpret_cast<const float *>(&model.buffers[weightView.buffer].data[
-                weightAccessor.byteOffset + weightView.byteOffset]);
+            weightAccessor.byteOffset + weightView.byteOffset]);
 
         for (size_t i = 0; i < posAccessor.count; ++i) {
             SkinVertex vertex{};
@@ -138,13 +138,13 @@ public:
 
         if (indexAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT) {
             const auto *indices = reinterpret_cast<const uint16_t *>(&indexBuffer.data[indexAccessor.byteOffset +
-                                                                                       indexView.byteOffset]);
+                indexView.byteOffset]);
             for (size_t i = 0; i < indexAccessor.count; ++i) {
                 result.indices.push_back(indices[i]);
             }
         } else if (indexAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT) {
             const auto *indices = reinterpret_cast<const uint32_t *>(&indexBuffer.data[indexAccessor.byteOffset +
-                                                                                       indexView.byteOffset]);
+                indexView.byteOffset]);
             for (size_t i = 0; i < indexAccessor.count; ++i) {
                 result.indices.push_back(indices[i]);
             }
@@ -153,9 +153,8 @@ public:
     }
 
 
-// Skin Data (New)
+    // Skin Data (New)
     static SkinData loadSkinData(tinygltf::Model &model, const tinygltf::Skin &gltfSkin) {
-
         SkinData skin;
         // Load All Joints:
         std::unordered_map<int, Joint *> jointMap;

@@ -27,11 +27,14 @@ public:
         CamRoll += ROT_SPEED * rollDelta;
 
 
-//        Yaw = (Yaw < 0.0f ? 0.0f : (Yaw > 2 * M_PI ? 2 * M_PI : Yaw));
         CamPitch = (CamPitch < 0.0f ? 0.0f : CamPitch);
         // 180
         CamPitch = (CamPitch > M_PI ? M_PI : CamPitch);
-//        Roll = (Roll < -M_PI ? -M_PI : (Roll > M_PI ? M_PI : Roll));
+
+        CamYaw = (CamYaw < 0.0f ? 0.0f : CamYaw);
+        // 180
+        CamYaw = (CamYaw > 2 * M_PI ? 2 * M_PI : CamYaw);
+
     }
 
     void print() {
@@ -84,10 +87,11 @@ public:
         );
 
         auto res = CamPosition + dp;
-        glm::mat4 M = glm::translate(glm::mat4(1.0f), glm::vec3(res.x, res.y, 0))
-                      * glm::rotate(glm::mat4(1.0f), yaw, glm::vec3(0, 1, 0))
-                      * glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(1, 0, 0))
-                      * glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1));
+        glm::mat4 M =
+                glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1))
+                * glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(1, 0, 0))
+                * glm::rotate(glm::mat4(1.0f), yaw, glm::vec3(0, 1, 0))
+                * glm::translate(glm::mat4(1.0f), glm::vec3(res.x, res.y, 0));
         matrices.world = M;
 
     }

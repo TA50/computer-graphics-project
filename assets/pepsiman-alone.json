@@ -1,0 +1,69 @@
+{
+  "game": {
+    "heroSpeed": 50,
+    "villainSpeed": 0.5,
+    "villainAnimationSpeed": 3,
+    "heroAnimationSpeed": 2,
+    "heroRotationSpeed": 20
+  },
+  "light": {
+    "color": {
+      "r": 10,
+      "g": 10,
+      "b": 10,
+      "a": 1
+    },
+    "translate": {
+      "x": 0,
+      "y": 100,
+      "z": 0
+    },
+    "quaternion": [
+      6.570948,
+      4.169076,
+      14.272171,
+      3.75588
+    ]
+  },
+  "camera": {
+    "euler": {
+      "yaw": -180,
+      "pitch": -63,
+      "roll": 0
+    },
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "targetDelta": {
+      "x": 0,
+      "y": 1,
+      "z": 0
+    },
+    "perspective": {
+      "fov": 50,
+      "near": 0.1,
+      "far": 500
+    },
+    "distance": 3
+  },
+  "skins": {
+    "pepsiman": {
+      "renderType": "pepsiman",
+      "modelPath": "assets/models/pepsiman/scene.gltf",
+      "textures": {
+        "base": {
+          "path": "assets/models/pepsiman/textures/Pepsiman_baseColor.png"
+        },
+        "metallic": {
+          "path": "assets/models/pepsiman/textures/Pepsiman_metallicRoughness.png"
+        },
+        "normal": {
+          "path": "assets/models/pepsiman/textures/Pepsiman_normal.png",
+          "normal": true
+        }
+      }
+    }
+  }
+}

@@ -38,8 +38,13 @@ public:
         baseTexturePath = std::move(filePath);
         baseTextureFormat = Fmt;
         baseTextureInitSampler = initSampler;
+        isCubeMap = false;
     }
 
+    void setCubeMapTexture(std::vector<std::string> path ){
+        cubeMapPaths = path;
+        isCubeMap = true;
+    }
 
     PoolSizes getPoolSizes() {
         PoolSizes poolSizes{};
@@ -54,9 +59,12 @@ public:
         modelType = type;
     }
 
+
+
     void init(BaseProject *bp, Camera *pCamera) {
         this->camera = pCamera;
         this->BP = bp;
+
         DSL.init(bp, {
                 {MVP_BINDING, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         VK_SHADER_STAGE_ALL_GRAPHICS,
                                                                                                        sizeof(SkyBoxUniformBufferObject), 1},
@@ -66,6 +74,13 @@ public:
 
 
         M.init(bp, &VD, modelPath, modelType);
+
+        if(isCubeMap){
+            BaseTexture.initCubic(BP, cubeMapPaths, VK_FORMAT_R8G8B8A8_UNORM);
+        } else {
+            BaseTexture.init(BP, baseTexturePath, baseTextureFormat, baseTextureInitSampler);
+        }
+
 //        BaseTexture.init(BP, baseTexturePath, baseTextureFormat, baseTextureInitSampler);
 
 //        Positive X (right)
@@ -74,17 +89,19 @@ public:
 //        Negative Y (bottom)
 //        Positive Z (front)
 //        Negative Z (back)
-        BaseTexture.initCubic(BP, {
-                "assets/textures/skybox/Citadella2/posx.jpg",
-                "assets/textures/skybox/Citadella2/negx.jpg",
-                "assets/textures/skybox/Citadella2/posy.jpg",
-                "assets/textures/skybox/Citadella2/negy.jpg",
-                "assets/textures/skybox/Citadella2/posz.jpg",
-                "assets/textures/skybox/Citadella2/negz.jpg",
-        }, VK_FORMAT_R8G8B8A8_UNORM);
-        P.init(BP, &VD, VERT_SHADER, FRAG_SHADER, {&DSL});
+//        BaseTexture.initCubic(BP, {
+//                "assets/textures/skybox/Citadella2/posx.jpg",
+//                "assets/textures/skybox/Citadella2/negx.jpg",
+//                "assets/textures/skybox/Citadella2/posy.jpg",
+//                "assets/textures/skybox/Citadella2/negy.jpg",
+//                "assets/textures/skybox/Citadella2/posz.jpg",
+//                "assets/textures/skybox/Citadella2/negz.jpg",
+//        }, VK_FORMAT_R8G8B8A8_UNORM);
+        P.init(BP, &VD, VERT_SHADER, isCubeMap ? CUBE_MAP_FRAG_SHADER :  FRAG_SHADER, {&DSL});
         P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
                               cullMode, false);
+
+        std::cout << "Skybox initialized" << std::endl;
 
     }
 
@@ -143,6 +160,7 @@ private:
     VkFormat baseTextureFormat;
     bool baseTextureInitSampler;
     std::string baseTexturePath;
+    std::vector<std::string> cubeMapPaths;
 
     uint32_t MVP_BINDING = 0;
     uint32_t BASE_TEXTURE_BINDING = 1;
@@ -153,6 +171,8 @@ private:
     std::string modelPath;
     ModelType modelType;
 
+    bool isCubeMap = false;
     const std::string VERT_SHADER = "assets/shaders/bin/skybox.vert.spv";
+    const std::string CUBE_MAP_FRAG_SHADER = "assets/shaders/bin/skybox-cubemap.frag.spv";
     const std::string FRAG_SHADER = "assets/shaders/bin/skybox.frag.spv";
 };

@@ -1,0 +1,70 @@
+cmake_minimum_required(VERSION 3.4 FATAL_ERROR)
+set(NAME main)
+set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1)
+
+set(CMAKE_CXX_STANDARD 20)
+set(GLFW_PATH "<path to glfw >")
+set(VULKAN_PATH "<path to vulkan>")
+
+project(${NAME})
+
+
+set(SRC_DIRECTORY "${PROJECT_SOURCE_DIR}/src")
+
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Running in Debug mode")
+    set(OUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin/Debug")
+elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
+    message(STATUS "Running in Release mode")
+    set(OUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin/Release")
+else ()
+    message("Unknown mode: " ${CMAKE_BUILD_TYPE})
+endif ()
+
+
+message(STATUS "Output directory: " ${OUT_DIRECTORY})
+set(SHADER_DIR "${OUT_DIRECTORY}/assets/shaders")
+
+# Copy Assets
+file(COPY ${PROJECT_SOURCE_DIR}/assets DESTINATION ${OUT_DIRECTORY})
+
+
+
+include_directories(${VULKAN_PATH}/Include)
+include_directories(${GLFW_PATH}/include)
+
+include_directories(${SRC_DIRECTORY}/headers)
+include_directories(${SRC_DIRECTORY})
+include_directories(${PROJECT_SOURCE_DIR}/assets)
+
+link_directories(
+        ${GLFW_PATH}/lib-vc2022
+        ${VULKAN_PATH}/Lib
+)
+
+
+add_executable(${PROJECT_NAME} ${SRC_DIRECTORY}/main.cpp)
+
+target_link_libraries(${PROJECT_NAME}
+        gdi32.lib opengl32.lib kernel32.lib user32.lib shell32.lib glfw3.lib vulkan-1.lib
+
+)
+
+
+# Build Shaders
+
+
+FILE(GLOB SHADERS "${SHADER_DIR}/src/*")
+message(STATUS "Building Shaders")
+foreach (SHADER ${SHADERS})
+    message(STATUS "Building Shader: " ${SHADER})
+    get_filename_component(SHADER_NAME ${SHADER} NAME)
+    add_custom_command(TARGET ${PROJECT_NAME}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADER_DIR}/bin
+            COMMAND glslc ${SHADER} -o ${SHADER_DIR}/bin/${SHADER_NAME}.spv
+    )
+ENDFOREACH ()
+
+message(STATUS "Finish Building Shaders")
+

@@ -1,0 +1,69 @@
+{
+  "game": {
+    "heroSpeed": 50,
+    "villainSpeed": 0.5,
+    "villainAnimationSpeed": 3,
+    "heroAnimationSpeed": 2,"heroRotationSpeed": 20
+  },
+  "light": {
+    "ang1": 135.0,
+    "ang2": 45.0,
+    "ang3": 0.0,
+    "color": {
+      "r": 2,
+      "g": 2,
+      "b": 2,
+      "a": 1
+    },
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "translate": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "rotate": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    }
+  },
+  "camera": {
+    "euler": {
+      "yaw": 180,
+      "pitch": 33,
+      "roll": 0
+    },
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "targetDelta": {
+      "x": 0,
+      "y": 2,
+      "z": 0
+    },
+    "perspective": {
+      "fov": 50,
+      "near": 0.1,
+      "far": 500
+    },
+    "distance": 3
+  },
+  "skins": {
+    "luna": {
+      "renderType": "animated-skin",
+      "modelPath": "assets/models/lynx_-_stars_-_animated/scene.gltf",
+      "textures": {
+        "base": {
+          "path": "assets/models/lynx_-_stars_-_animated/textures/stars_baseColor.png"
+        }
+      }
+    }
+  }
+}
+

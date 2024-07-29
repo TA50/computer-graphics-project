@@ -1,0 +1,165 @@
+{
+  "game": {
+    "heroSpeed": 20,
+    "villainSpeed": 0.2,
+    "villainAnimationSpeed": 10,
+    "heroAnimationSpeed": 1,
+    "heroRotationSpeed": 20
+  },
+  "light": {
+    "specularGamma": 200,
+    "color": {
+      "r": 1,
+      "g": 1,
+      "b": 1,
+      "a": 1
+    },
+    "translate": {
+      "x": 3.6413424015045166,
+      "y": 3.3561453819274902,
+      "z": 1.1169260740280151
+    },
+    "rotate": {
+      "x": 156.074,
+      "y": 23.3487
+    },
+    "quaternion": [
+      -0.3960249125957489,
+      0.1478610783815384,
+      -0.1478610783815384,
+      0.8941132426261902
+    ],
+    "ambient": {
+      "cxp": {
+        "r": 0.596,
+        "g": 0.51,
+        "b": 0.745
+      },
+      "cxn": {
+        "r": 0.459,
+        "g": 0.447,
+        "b": 0.478
+      },
+      "cyp": {
+        "r": 0.518,
+        "g": 0.329,
+        "b": 0.784
+      },
+      "cyn": {
+        "r": 0.078,
+        "g": 0.02,
+        "b": 0.161
+      },
+      "czp": {
+        "r": 0.518,
+        "g": 0.329,
+        "b": 0.784
+      },
+      "czn": {
+        "r": 0.518,
+        "g": 0.329,
+        "b": 0.784
+      }
+    }
+  },
+  "camera": {
+    "euler": {
+      "yaw": 180,
+      "pitch": 33,
+      "roll": 0
+    },
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "targetDelta": {
+      "x": 0,
+      "y": 5,
+      "z": -4
+    },
+    "perspective": {
+      "fov": 90,
+      "near": 0.1,
+      "far": 500
+    },
+    "distance": 10
+  },
+  "gameObjects": {
+    "can": {
+      "renderType": "metallic",
+      "modelPath": "assets/models/pepsi_can/scene.gltf",
+      "modelType": "gltf",
+      "textures": {
+        "base": {
+          "path": "assets/models/pepsi_can/textures/Material_baseColor.png"
+        },
+        "metallic": {
+          "path": "assets/models/pepsi_can/textures/Material_metallicRoughness.png"
+        },
+        "normal": {
+          "path": "assets/models/pepsi_can/textures/Material_normal.png",
+          "normal": true
+        }
+      },
+      "translate": {
+        "x": 1,
+        "y": 2.87,
+        "z": -12
+      },
+      "scale": {
+        "x": 1.5,
+        "y": 1.5,
+        "z": 1.5
+      },
+      "rotate": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      }
+    },
+    "road": {
+      "renderType": "stationary",
+      "modelPath": "assets/models/low_road/long road.gltf",
+      "modelType": "gltf",
+      "textures": {
+        "base": {
+          "path": "assets/models/low_road/textures/Material_006_baseColor.jpg"
+        }
+      },
+      "rotate": {
+        "x": -90,
+        "y": 0,
+        "z": 180
+      },
+      "scale": {
+        "x": 10.0,
+        "y": 1,
+        "z": 2
+      },
+      "translate": {
+        "x": 0,
+        "y": 0,
+        "z": -40
+      }
+    }
+  },
+  "skins": {
+    "pepsiman": {
+      "renderType": "pepsiman",
+      "modelPath": "assets/models/pepsiman/scene.gltf",
+      "textures": {
+        "base": {
+          "path": "assets/models/pepsiman/textures/Pepsiman_baseColor.png"
+        },
+        "metallic": {
+          "path": "assets/models/pepsiman/textures/Pepsiman_metallicRoughness.png"
+        },
+        "normal": {
+          "path": "assets/models/pepsiman/textures/Pepsiman_normal.png",
+          "normal": true
+        }
+      }
+    }
+  }
+}

@@ -1,62 +1,65 @@
 #pragma once
 
-struct LightUnifromBufferObject {
-    alignas(16) glm::vec3 lightDir;
-    alignas(16) glm::vec4 lightColor;
-    alignas(16) glm::vec3 eyePos;
-    alignas(16) glm::vec3 cameraPos;
-
-    static std::vector<DescriptorSetLayoutBinding> getDescriptorSetLayoutBindings() {
-        return {
-            {
-                0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT,
-                sizeof(LightUnifromBufferObject), 1
-            },
-        };
-    }
+struct AmbientColors {
+    alignas(16) glm::vec3 cxp = glm::vec3(1);
+    alignas(16) glm::vec3 cxn = glm::vec3(1);
+    alignas(16) glm::vec3 cyp = glm::vec3(1);
+    alignas(16) glm::vec3 cyn = glm::vec3(1);
+    alignas(16) glm::vec3 czp = glm::vec3(1);
+    alignas(16) glm::vec3 czn = glm::vec3(1);
 };
 
 
 class Light {
 public:
-    Light() = default;
 
-    void init(BaseProject *bp) {
-        DSL.init(bp, LightUnifromBufferObject::getDescriptorSetLayoutBindings());
+    struct {
+        glm::vec3 direction;
+        glm::vec3 position;
+        glm::vec4 color;
+    } lightInfo;
+
+
+    void setTranslation(glm::vec3 t) {
+        translation = t;
     }
 
-
-
-    void setUBO(glm::vec3 lightDir, glm::vec4 lightColor, glm::vec3 eyePos, glm::vec3 cameraPos) {
-        lubo.lightDir = lightDir;
-        lubo.lightColor = lightColor;
-        lubo.eyePos = eyePos;
-        lubo.cameraPos = cameraPos;
+    void setRotation(glm::vec3 r) {
+        rotation = r;
     }
 
-    LightUnifromBufferObject getUBO() {
-        return lubo;
+    void setColor(glm::vec4 c) {
+        color = c;
     }
 
-    DescriptorSetLayout getDSL() {
-        return DSL;
+    void update() {
+//        float pitch = glm::radians(rotation.x);
+//        float yaw = glm::radians(rotation.y);
+//        glm::vec3 direction;
+//        direction.x = cos(pitch) * cos(yaw);
+//        direction.y = sin(pitch);
+//        direction.z = cos(pitch) * sin(yaw);
+//        lightInfo.direction = glm::normalize(direction);
+//        lightInfo.position = translation;
+//        lightInfo.color = color;
+        LWm = glm::translate(glm::mat4(1), translation) *
+              glm::mat4(quat);
+        lightInfo.color = color;
+        lightInfo.direction = LWm * glm::vec4(0, 1, 0, 0);
+        lightInfo.position = LWm * glm::vec4(0, 0, 0, 1);
     }
 
-    DescriptorSet getDS() {
-        return DS;
+    void setRotation(glm::quat q) {
+        quat = q;
     }
-
-    PoolSizes getPoolSizes() {
-        PoolSizes poolSizes = {};
-        poolSizes.uniformBlocksInPool = 1;
-        poolSizes.texturesInPool = 0;
-        poolSizes.setsInPool = 1;
-        return poolSizes;
-    }
-
-
+    AmbientColors ambientColors{};
+    float specularGamma = 128.0f;
 private:
-    LightUnifromBufferObject lubo{};
-    DescriptorSetLayout DSL;
-    DescriptorSet DS;
+    glm::vec3 translation;
+    glm::vec3 rotation;
+    glm::vec4 color;
+    glm::quat quat = glm::quat(1, 0, 0, 0);
+
+    glm::mat4 LWm;
+
 };

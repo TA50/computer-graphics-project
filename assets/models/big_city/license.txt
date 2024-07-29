@@ -1,0 +1,11 @@
+Model Information:
+* title:	Big city
+* source:	https://sketchfab.com/3d-models/big-city-e73ddee654584507ad54d208a3ff0094
+* author:	skibidi toilet maker (https://sketchfab.com/xdplayer)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Big city" (https://sketchfab.com/3d-models/big-city-e73ddee654584507ad54d208a3ff0094) by skibidi toilet maker (https://sketchfab.com/xdplayer) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
